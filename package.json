@@ -1,0 +1,35 @@
+{
+  "name": "procjam-2020",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Large World Generator #procjam 2020",
+  "keywords": [
+    "#procjam",
+    "pcg",
+    "procedural",
+    "content",
+    "generation",
+    "html5",
+    "typescript"
+  ],
+  "repository": "github:spissvinkel/procjam-2020",
+  "homepage": "https://spissvinkel.itch.io/large-world-generator-procjam-2020",
+  "author": "Simen Storsveen (https://spissvinkel.itch.io/)",
+  "license": "MIT",
+  "scripts": {
+    "build": "build.sh ADVANCED",
+    "lint": "eslint . --ext .js,.ts"
+  },
+  "dependencies": {
+    "@spissvinkel/alea": "^1.0.0",
+    "@spissvinkel/maths": "^1.1.1"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.4.1",
+    "@typescript-eslint/parser": "^4.4.1",
+    "eslint": "^7.11.0",
+    "express": "^4.17.1",
+    "google-closure-compiler": "^20201102.0.1",
+    "typescript": "^4.1.2"
+  }
+}

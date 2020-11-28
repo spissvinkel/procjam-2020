@@ -1,0 +1,9 @@
+.vscode
+
+/build
+/dist
+
+/node_modules
+/.eslintrc.js
+
+/httpd.js
