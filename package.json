@@ -2,7 +2,7 @@
   "name": "procjam-2020",
   "version": "1.0.0",
   "private": true,
-  "description": "Large World Generator #procjam 2020",
+  "description": "Map Generator #procjam 2020",
   "keywords": [
     "#procjam",
     "pcg",
@@ -13,7 +13,7 @@
     "typescript"
   ],
   "repository": "github:spissvinkel/procjam-2020",
-  "homepage": "https://spissvinkel.itch.io/large-world-generator-procjam-2020",
+  "homepage": "https://spissvinkel.itch.io/map-generator-procjam-2020",
   "author": "Simen Storsveen (https://spissvinkel.itch.io/)",
   "license": "MIT",
   "scripts": {

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <link rel="stylesheet" type="text/css" href="styles.css" />
+    <script src="index.js"></script>
+    <title>map generator #procjam 2020</title>
+  </head>
+  <body>
+    <div id="debug-top" class="debug hidden">
+      <div class="debug-top-group">
+        <div class="debug-paused">
+          <span class="undervalue">unpaused</span><span id="paused" class="value"></span>
+        </div>
+      </div> <!-- debug-top-group -->
+      <div class="debug-top-group">
+        <div class="debug-fps">
+          <span class="label">fps</span><span class="undervalue">888</span><span id="fps" class="value">0</span>
+        </div>
+      </div> <!-- debug-top-group -->
+    </div> <!-- /debug-top -->
+    <div id="page">
+      <div id="wrapper">
+        <div id="bg-layer" class="layer"></div>
+        <canvas id="canvas" class="layer"></canvas>
+        <div id="ui-layer" class="layer">
+          <div id="loading-ui" class="ui">
+            <div class="loading-element align-middle">
+              <h1>map generator #procjam 2020</h1>
+            </div>
+            <div class="loading-element align-middle">
+              <h3 id="loading-status">Loading</h3>
+            </div>
+            <div class="loading-element align-bottom">
+              <p class="distribute">
+                <span class="nowrap label">spissvinkel.itch.io</span>
+                <span class="nowrap label">@simenstorsveen</span>
+                <span class="nowrap label">github.com/spissvinkel</span>
+              </p>
+            </div>
+          </div> <!-- /loading-ui -->
+          <div id="game-ui" class="ui hidden">
+            <div class="gui-top">
+              <div class="gui-top-left nowrap">
+              </div>
+              <div class="gui-top-right">
+                <span id="score" class="nowrap">0</span>
+              </div>
+            </div>
+          </div> <!-- /game-ui -->
+          <div id="test-ui" class="ui hidden">
+          </div> <!-- /test-ui -->
+        </div> <!-- /ui-layer -->
+        <div id="debug-layer" class="layer hidden">
+          <div id="debug-ui" class="ui hidden">
+          </div> <!-- /debug-ui -->
+        </div> <!-- /debug-layer -->
+        <div id="input-layer" class="layer"></div> <!-- /input-layer -->
+      </div> <!-- /wrapper -->
+    </div> <!-- /page -->
+    <img id="tx-cliff-brown-block-quarter" src="gfx/cliff-brown-block-quarter.png" class="texture" />
+    <img id="tx-cliff-brown-top-e" src="gfx/cliff-brown-top-e.png" class="texture" />
+    <img id="tx-cliff-brown-top-n" src="gfx/cliff-brown-top-n.png" class="texture" />
+    <img id="tx-cliff-brown-top-s" src="gfx/cliff-brown-top-s.png" class="texture" />
+    <img id="tx-cliff-brown-top-w" src="gfx/cliff-brown-top-w.png" class="texture" />
+    <img id="tx-cliff-brown-corner-top-ne" src="gfx/cliff-brown-corner-top-ne.png" class="texture" />
+    <img id="tx-cliff-brown-corner-top-nw" src="gfx/cliff-brown-corner-top-nw.png" class="texture" />
+    <img id="tx-cliff-brown-corner-top-se" src="gfx/cliff-brown-corner-top-se.png" class="texture" />
+    <img id="tx-cliff-brown-corner-top-sw" src="gfx/cliff-brown-corner-top-sw.png" class="texture" />
+    <img id="tx-logs-stack-w" src="gfx/logs-stack-w.png" class="texture" />
+    <img id="tx-tree-oak-dark-w" src="gfx/tree-oak-dark-w.png" class="texture" />
+    <!-- <audio id="snd-laser-1" src="snd/laser-1.ogg" class="sound" /> -->
+  </body>
+</html>

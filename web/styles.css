@@ -1,0 +1,230 @@
+@charset "UTF-8";
+
+@font-face {
+  font-family: 'Michroma';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Michroma'),
+       url('fnt/michroma-v8-latin-regular.woff2') format('woff2'),
+       url('fnt/michroma-v8-latin-regular.woff') format('woff');
+}
+
+body {
+  position: absolute;
+  overflow: hidden;
+  margin: 0px;
+  padding: 0px;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  background-color: #1f2226;
+  color: rgba(255, 255, 255, 0.55);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  font-size: 12pt;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: stretch;
+  cursor: url('gfx/cursor.png'), default;
+  /* cursor: none; */
+  user-select: none;
+  -ms-user-select: none;
+}
+
+body, input, button {
+  font-family: 'Michroma', sans-serif;
+  letter-spacing: 0.12em;
+}
+
+canvas {
+  display: block;
+  margin: 0px;
+  padding: 0px;
+}
+
+h1, h2, h3, h4 {
+  letter-spacing: 0.1425em;
+  text-transform: uppercase;
+}
+
+.align-top {
+  justify-content: flex-start;
+}
+
+.align-middle {
+  justify-content: center;
+}
+
+.align-bottom {
+  justify-content: flex-end;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.hidden, .texture, .sound {
+  display: none !important;
+}
+
+#page {
+  margin: 5px;
+  flex: 1;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: stretch;
+  border: 1px solid #15161a;
+  border-radius: 5px;
+}
+
+#wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.layer {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+}
+
+#bg-layer {
+  /* background-color: #2a2d33; */
+  background-image: url('gfx/background.png');
+  border: 1px solid transparent;
+  border-radius: 5px;
+}
+
+#ui-layer {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+}
+
+.ui {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+}
+
+#loading-ui {
+  display: flex;
+  flex-flow: column nowrap;
+  text-align: center;
+  padding: 0px 20px;
+}
+
+.loading-element {
+  flex: 1;
+  display: flex;
+  flex-flow: column nowrap;
+}
+
+.distribute {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: space-around;
+}
+
+.label {
+  margin: 0px 10px;
+}
+
+.gui-top {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+}
+
+.gui-top-left {
+  margin: 10px;
+  background-color: rgba(42, 45, 51, 0.5); /* #2a2d33;*/
+}
+
+.life {
+  display: inline-block;
+  background-image: url('gfx/life-1.png');
+  background-repeat: no-repeat;
+  width: 33px;
+  height: 26px;
+  margin: 5px;
+}
+
+.gui-top-right {
+  margin: 15px 10px;
+  height: 26px;
+  background-color: rgba(42, 45, 51, 0.5); /* #2a2d33;*/
+}
+
+#score {
+  display: inline-block;
+  height: 100%;
+  font-weight: bold;
+  color: #f0f0f0;
+  padding: 0px 5px;
+}
+
+#debug-top {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+}
+
+.debug-top-group {
+  margin: 5px 10px;
+  font-weight: bold;
+  font-style: italic;
+  text-align: right;
+}
+
+.debug-top-group > div {
+  position: relative;
+  margin-bottom: 2px;
+}
+
+.debug-top-group .label,
+.debug-top-group .value,
+.debug-top-group .undervalue {
+  display: inline-block;
+}
+
+.debug-top-group .label {
+  font-size: 0.75em;
+  vertical-align: top;
+  margin: 0px;
+}
+
+.debug-top-group .value,
+.debug-top-group .undervalue {
+  font-size: 1.1em;
+  width: 63px;
+}
+
+.debug-top-group .undervalue {
+  position: absolute;
+  right: 0px;
+}
+
+.debug-top-group .debug-paused .value,
+.debug-top-group .debug-paused .undervalue {
+  width: 129px;
+}
+
+.debug-paused {
+  color: pink;
+}
+
+.debug-paused .undervalue {
+  color: rgba(255, 192, 203, 0.15);
+}
+
+.debug-fps {
+  color: yellow;
+}
+
+.debug-fps .undervalue {
+  color: rgba(255, 255, 0, 0.15);
+}
