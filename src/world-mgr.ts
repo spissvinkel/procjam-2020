@@ -1,6 +1,14 @@
 export const enum ItemType {
   LOGS,
-  TREE
+  TREE,
+  PLAYER_NE,
+  PLAYER_NW,
+  PLAYER_SE,
+  PLAYER_SW,
+  PLAYER_E,
+  PLAYER_N,
+  PLAYER_S,
+  PLAYER_W
 }
 
 export interface World {
@@ -30,6 +38,14 @@ export const initWorld = (world: World): World => {
       let item: ItemType | null = null;
       if (r === 3 && c === 2) item = ItemType.TREE;
       else if (r === 2 && c === 8) item = ItemType.LOGS;
+      else if (r === 10 && c === 1) item = ItemType.PLAYER_NE;
+      else if (r === 9 && c === 2) item = ItemType.PLAYER_NW;
+      else if (r === 8 && c === 3) item = ItemType.PLAYER_SE;
+      else if (r === 7 && c === 4) item = ItemType.PLAYER_SW;
+      else if (r === 6 && c === 5) item = ItemType.PLAYER_E;
+      else if (r === 5 && c === 6) item = ItemType.PLAYER_N;
+      else if (r === 4 && c === 7) item = ItemType.PLAYER_S;
+      else if (r === 3 && c === 8) item = ItemType.PLAYER_W;
       row[c] = { ground, item };
     }
   }

@@ -13,6 +13,7 @@
 !httpd.js
 
 publish-*.sh
+tmp_gfx
 
 /node_modules
 /package-lock.json

@@ -44,7 +44,10 @@ export const initItemsChunk = (chunk: ItemsChunk): ItemsChunk => {
 };
 
 export const updateItemsChunk = (chunk: ItemsChunk, world: World, worldRow: number, worldCol: number): ItemsChunk => {
-  const { TREE_O_D_W, LOGS_S_W } = TX_SPECS;
+  const {
+    TREE_O_D_W, LOGS_S_W,
+    CH_DIG_NE, CH_DIG_NW, CH_DIG_SE, CH_DIG_SW, CH_DIG_E, CH_DIG_N, CH_DIG_S, CH_DIG_W
+  } = TX_SPECS;
   const { drawables } = chunk;
   const { cells } = world;
   chunk.worldRow = worldRow;
@@ -61,9 +64,17 @@ export const updateItemsChunk = (chunk: ItemsChunk, world: World, worldRow: numb
       let txSpec: TxSpec | null = null;
       if (item === ItemType.TREE) txSpec = TREE_O_D_W;
       else if (item === ItemType.LOGS) txSpec = LOGS_S_W;
-      if (txSpec !== null) {
+      else if (item === ItemType.PLAYER_NE) txSpec = CH_DIG_NE;
+      else if (item === ItemType.PLAYER_NW) txSpec = CH_DIG_NW;
+      else if (item === ItemType.PLAYER_SE) txSpec = CH_DIG_SE;
+      else if (item === ItemType.PLAYER_SW) txSpec = CH_DIG_SW;
+      else if (item === ItemType.PLAYER_E) txSpec = CH_DIG_E;
+      else if (item === ItemType.PLAYER_N) txSpec = CH_DIG_N;
+      else if (item === ItemType.PLAYER_S) txSpec = CH_DIG_S;
+      else if (item === ItemType.PLAYER_W) txSpec = CH_DIG_W;
+      if (txSpec !== null && d.txInfo !== undefined) {
         const { txId } = txSpec;
-        if (d.txInfo!.textureId === txId) d.enabled = true;
+        if (d.txInfo.textureId === txId) d.enabled = true;
         else setCellOffset(updateTxDrawable(d, txId, true), chunk, txSpec, r, c);
       }
     }

@@ -52,7 +52,15 @@ export const TX_SPECS = {
   TOP_SE    : mkTxSpec('cliff-brown-corner-top-se', -34,   54.0),
   TOP_SW    : mkTxSpec('cliff-brown-corner-top-sw',  40,   17.5),
   TREE_O_D_W: mkTxSpec('tree-oak-dark-w',           -37,  105.5),
-  LOGS_S_W  : mkTxSpec('logs-stack-w',              -53,   43.5)
+  LOGS_S_W  : mkTxSpec('logs-stack-w',              -53,   43.5),
+  CH_DIG_NE : mkTxSpec('char-digger-ne',            -22,   75.0),
+  CH_DIG_NW : mkTxSpec('char-digger-nw',            -26,   70.5),
+  CH_DIG_SE : mkTxSpec('char-digger-se',            -26,   70.5),
+  CH_DIG_SW : mkTxSpec('char-digger-sw',            -22,   75.0),
+  CH_DIG_E  : mkTxSpec('char-digger-e',             -26,   73.0),
+  CH_DIG_N  : mkTxSpec('char-digger-n',             -23,   73.0),
+  CH_DIG_S  : mkTxSpec('char-digger-s',             -23,   73.0),
+  CH_DIG_W  : mkTxSpec('char-digger-w',             -27,   73.0)
 };
 
 export const CELL_X_OFFSET = 73 * PX_SCALE + 0.02;
