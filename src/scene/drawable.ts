@@ -42,29 +42,39 @@ const mkTxSpec = (txId: string, xOffset: number, yOffset: number): TxSpec => {
 };
 
 export const TX_SPECS = {
-  BLOCK     : mkTxSpec('cliff-brown-block-quarter', -75,   54.5),
-  TOP_E     : mkTxSpec('cliff-brown-top-e',         -75,   54.5),
-  TOP_N     : mkTxSpec('cliff-brown-top-n',         -75,   17.5),
-  TOP_S     : mkTxSpec('cliff-brown-top-s',         -35,   53.5),
-  TOP_W     : mkTxSpec('cliff-brown-top-w',         -34,   17.5),
-  TOP_NE    : mkTxSpec('cliff-brown-corner-top-ne', -75,   17.5),
-  TOP_NW    : mkTxSpec('cliff-brown-corner-top-nw', -34,  -35.5),
-  TOP_SE    : mkTxSpec('cliff-brown-corner-top-se', -34,   54.0),
-  TOP_SW    : mkTxSpec('cliff-brown-corner-top-sw',  40,   17.5),
-  TREE_O_D_W: mkTxSpec('tree-oak-dark-w',           -37,  105.5),
-  LOGS_S_W  : mkTxSpec('logs-stack-w',              -53,   43.5),
-  CH_DIG_NE : mkTxSpec('char-digger-ne',            -22,   75.0),
-  CH_DIG_NW : mkTxSpec('char-digger-nw',            -26,   70.5),
-  CH_DIG_SE : mkTxSpec('char-digger-se',            -26,   70.5),
-  CH_DIG_SW : mkTxSpec('char-digger-sw',            -22,   75.0),
-  CH_DIG_E  : mkTxSpec('char-digger-e',             -26,   73.0),
-  CH_DIG_N  : mkTxSpec('char-digger-n',             -23,   73.0),
-  CH_DIG_S  : mkTxSpec('char-digger-s',             -23,   73.0),
-  CH_DIG_W  : mkTxSpec('char-digger-w',             -27,   73.0)
+  BLOCK     : mkTxSpec('cliff-brown-block-quarter',    -75,   54.5),
+  BLOCK_DARK: mkTxSpec('cliff-brown-block-quart-dark', -75,   54.5),
+
+  TOP_SIDE_E: mkTxSpec('cliff-brown-top-e',            -75,   54.5),
+  TOP_SIDE_N: mkTxSpec('cliff-brown-top-n',            -75,   17.5),
+  TOP_SIDE_S: mkTxSpec('cliff-brown-top-s',            -35,   53.5),
+  TOP_SIDE_W: mkTxSpec('cliff-brown-top-w',            -34,   17.5),
+
+  TOP_OUT_NE: mkTxSpec('cliff-brown-corner-top-ne',    -75,   17.5),
+  TOP_OUT_NW: mkTxSpec('cliff-brown-corner-top-nw',    -34,  -35.5),
+  TOP_OUT_SE: mkTxSpec('cliff-brown-corner-top-se',    -34,   54.0),
+  TOP_OUT_SW: mkTxSpec('cliff-brown-corner-top-sw',     40,   17.5),
+
+  TOP_IN_NE : mkTxSpec('cliff-brown-inner-top-ne',     -75,   54.0),
+  TOP_IN_NW : mkTxSpec('cliff-brown-inner-top-nw',     -75,   17.5),
+  TOP_IN_SE : mkTxSpec('cliff-brown-inner-top-se',     -75,   54.0),
+  TOP_IN_SW : mkTxSpec('cliff-brown-inner-top-sw',     -34,   54.0),
+
+  TREE_O_D_W: mkTxSpec('tree-oak-dark-w',              -37,  105.5),
+  LOGS_S_W  : mkTxSpec('logs-stack-w',                 -53,   43.5),
+
+  CH_DIG_NE : mkTxSpec('char-digger-ne',               -22,   75.0),
+  CH_DIG_NW : mkTxSpec('char-digger-nw',               -26,   70.5),
+  CH_DIG_SE : mkTxSpec('char-digger-se',               -26,   70.5),
+  CH_DIG_SW : mkTxSpec('char-digger-sw',               -22,   75.0),
+  CH_DIG_E  : mkTxSpec('char-digger-e',                -26,   73.0),
+  CH_DIG_N  : mkTxSpec('char-digger-n',                -23,   73.0),
+  CH_DIG_S  : mkTxSpec('char-digger-s',                -23,   73.0),
+  CH_DIG_W  : mkTxSpec('char-digger-w',                -27,   73.0)
 };
 
-export const CELL_X_OFFSET = 73 * PX_SCALE + 0.02;
-export const CELL_Z_OFFSET = 52 * PX_SCALE + 0.02;
+export const CELL_X_OFFSET = 73 * PX_SCALE; // + 0.02;
+export const CELL_Z_OFFSET = 52 * PX_SCALE; // + 0.02;
 
 export const ROW_OFFSET = vec2.of(-CELL_X_OFFSET, -CELL_Z_OFFSET);
 export const COL_OFFSET = vec2.of( CELL_X_OFFSET, -CELL_Z_OFFSET);

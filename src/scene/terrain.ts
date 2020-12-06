@@ -44,7 +44,12 @@ export const initTerrain = (terrain: Terrain): Terrain => {
 };
 
 export const updateTerrain = (terrain: Terrain, world: World, worldRow: number, worldCol: number): Terrain => {
-  const { BLOCK, TOP_NW, TOP_N, TOP_NE, TOP_W, TOP_E, TOP_SW, TOP_S, TOP_SE } = TX_SPECS;
+  const {
+    BLOCK, BLOCK_DARK,
+    TOP_SIDE_N, TOP_SIDE_E, TOP_SIDE_S, TOP_SIDE_W,
+    TOP_OUT_NW, TOP_OUT_NE, TOP_OUT_SW, TOP_OUT_SE,
+    TOP_IN_NW, TOP_IN_NE, TOP_IN_SW, TOP_IN_SE
+  } = TX_SPECS;
   const { drawables } = terrain;
   const { cells } = world;
   terrain.worldRow = worldRow;
@@ -57,12 +62,17 @@ export const updateTerrain = (terrain: Terrain, world: World, worldRow: number, 
     if (wr < -1 || wr > WORLD_ROWS || wc < -1 || wc > WORLD_COLS) d.enabled = false;
     else {
       let txSpec: TxSpec | null = null;
-      if (wc === -1) txSpec = wr === -1 ? TOP_NW : (wr === WORLD_ROWS ? TOP_SW : TOP_W);
-      else if (wc === WORLD_COLS) txSpec = wr === -1 ? TOP_NE : (wr === WORLD_ROWS ? TOP_SE : TOP_E);
-      else if (wr === -1) txSpec = TOP_N;
-      else if (wr === WORLD_ROWS) txSpec = TOP_S;
-      else if (cells[wr][wc] === undefined) d.enabled = false;
-      else txSpec = BLOCK;
+      if (wc === -1) txSpec = wr === -1 ? TOP_OUT_NW : (wr === WORLD_ROWS ? TOP_OUT_SW : TOP_SIDE_W);
+      else if (wc === WORLD_COLS) txSpec = wr === -1 ? TOP_OUT_NE : (wr === WORLD_ROWS ? TOP_OUT_SE : TOP_SIDE_E);
+      else if (wr === -1) txSpec = TOP_SIDE_N;
+      else if (wr === WORLD_ROWS) txSpec = TOP_SIDE_S;
+      else if (cells[wr][wc] === undefined) {
+        if (cells[wr][wc - 1] !== undefined && cells[wr - 1][wc - 1] !== undefined && cells[wr - 1][wc] !== undefined) txSpec = TOP_IN_SE;
+        else d.enabled = false;
+      } else {
+        const dark = wr % 2 === wc % 2;
+        txSpec = dark ? BLOCK_DARK : BLOCK;
+      }
       if (txSpec !== null && d.txInfo !== undefined) {
         const { txId } = txSpec;
         if (d.txInfo.textureId === txId) d.enabled = true;
