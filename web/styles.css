@@ -221,6 +221,14 @@ h1, h2, h3, h4 {
   color: rgba(255, 192, 203, 0.15);
 }
 
+.debug-chunks {
+  color: rgb(0, 192, 192);
+}
+
+.debug-chunks .undervalue {
+  color: rgba(0, 192, 192, 0.15);
+}
+
 .debug-fps {
   color: yellow;
 }

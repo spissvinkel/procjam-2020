@@ -7,9 +7,10 @@ import { addCellOffset, mkPathDrawable, PX_SCALE, JoinStyle } from './drawable';
 export interface Feedback extends Entity<Feedback> {
   worldRow: number; // centre
   worldCol: number; // centre
-  row: number; // position
-  col: number; // position
+  row     : number; // position
+  col     : number; // position
 }
+
 const HALF_WIDTH  = 67.0 * PX_SCALE;
 const HALF_HEIGHT = 46.5 * PX_SCALE;
 const Y_OFFSET    =  0.5 * PX_SCALE;

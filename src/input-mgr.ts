@@ -4,8 +4,7 @@ import * as vec2 from '@spissvinkel/maths/vec2';
 
 import { world2grid } from './scene/drawable';
 import { Viewport } from './engine';
-import { getScene, worldCol, worldRow } from './scene/scene-mgr';
-import { updateFeedback } from './scene/feedback';
+import { getScene, gridClick } from './scene/scene-mgr';
 
 export const enum Input {
   DEBUG       = '|',
@@ -200,16 +199,6 @@ const onWheel = (event: WheelEvent): void => {
   mouseStatePixels.wheel += event.deltaY;
 };
 
-/**
- * TODO:
- *
- * Press/down + move (immediately) => Swipe => Move camera
- * Press/down + release/up (no move) => Click => Select item / tile
- * Hold (press/down for X ms) over item + move => "Move" => Select + move item
- * Hold (press/down for X ms) over tile (no item) + move => Swipe? => Move camera?
- *
- */
-
 const updateMouseInput = (): void => {
   const { down: currentlyDown, position: pxPos, upPos, downPos, wheel: pxWheel } = mouseStatePixels;
   const { down: registeredDown, position: normPos, deltaPos, tmpPos } = mouseStateNormalised;
@@ -234,12 +223,12 @@ const updateMouseInput = (): void => {
 
   // TODO: organise/refactor this
   if (wasDown && !currentlyDown) {
-    const { camera: { m }, feedback } = getScene();
+    const { camera: { m } } = getScene();
     mat3.mulV2(m, normPos, worldPos);
     mat3.mulV2(world2grid, worldPos, gridPos);
-    const row = Math.floor(-gridPos.y + 0.5) + worldRow;
-    const col = Math.floor(gridPos.x + 0.5) + worldCol;
-    updateFeedback(feedback, worldRow, worldCol, row, col);
+    const row = Math.floor(-gridPos.y + 0.5);
+    const col = Math.floor(gridPos.x + 0.5);
+    gridClick(row, col);
   }
 };
 

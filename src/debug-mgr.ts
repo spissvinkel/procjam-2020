@@ -2,6 +2,7 @@ import { isPaused, resize } from './engine';
 import { addListener, Input } from './input-mgr';
 import { getLastSysTime, ONE_SECOND } from './time-mgr';
 import { hideAll, showAll } from './utils';
+import { getChunkPoolSize, getNumChunks } from './world-mgr';
 
 type Div = HTMLElement | null;
 
@@ -18,6 +19,8 @@ const DEBUG_STATES = [
 let debugState = 1;
 
 const fps = { last: 0, count: 0, avg: 0, div: null as Div };
+const chunks = { div: null as Div };
+const pool = { div: null as Div };
 const paused = { div: null as Div };
 
 export const getDebugState = (): DebugState => DEBUG_STATES[debugState];
@@ -32,12 +35,16 @@ export const update = (): void => {
   fps.count++;
   if (getDebugState() !== DebugState.DEBUG_OFF) {
     if (fps.div !== null) fps.div.textContent = `${fps.avg}`;
+    if (chunks.div !== null) chunks.div.textContent = `${getNumChunks()}`;
+    if (pool.div !== null) pool.div.textContent = `${getChunkPoolSize()}`;
     if (paused.div !== null) paused.div.textContent = isPaused() ? 'paused' : '';
   }
 };
 
 export const init = (): void => {
   fps.div = document.getElementById('fps');
+  chunks.div = document.getElementById('chunks');
+  pool.div = document.getElementById('pool');
   paused.div = document.getElementById('paused');
   addListener(Input.DEBUG, cycleDebug);
   updateHtml();

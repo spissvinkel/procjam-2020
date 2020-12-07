@@ -6,7 +6,6 @@ import * as InputMgr from './input-mgr';
 import * as RenderMgr from './render-mgr';
 import * as SceneMgr from './scene/scene-mgr';
 import * as TimeMgr from './time-mgr';
-import * as UIMgr from './ui-mgr';
 import { hide, show } from './utils';
 
 export interface Viewport {
@@ -36,7 +35,6 @@ const doNextFrame = (timeMillis: number): void => {
   InputMgr.update();
   SceneMgr.update();
   RenderMgr.render(viewport.context);
-  UIMgr.update();
   DebugMgr.update();
   if (!runState.paused) window.requestAnimationFrame(doNextFrame);
 };
@@ -62,7 +60,6 @@ const init = (): void => {
   initRunState();
   resize();
   SceneMgr.init();
-  UIMgr.init();
   InputMgr.init();
   DebugMgr.init();
 };
