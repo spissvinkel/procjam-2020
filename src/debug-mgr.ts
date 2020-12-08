@@ -1,5 +1,6 @@
 import { isPaused, resize } from './engine';
 import { addListener, Input } from './input-mgr';
+import { worldCol, worldRow } from './scene/scene-mgr';
 import { getLastSysTime, ONE_SECOND } from './time-mgr';
 import { hideAll, showAll } from './utils';
 import { getChunkPoolSize, getNumChunks } from './world-mgr';
@@ -19,8 +20,8 @@ const DEBUG_STATES = [
 let debugState = 1;
 
 const fps = { last: 0, count: 0, avg: 0, div: null as Div };
-const chunks = { div: null as Div };
-const pool = { div: null as Div };
+const chunks = { chunksDiv: null as Div, poolDiv: null as Div };
+const wpos = { wRowDiv: null as Div, wColDiv: null as Div };
 const paused = { div: null as Div };
 
 export const getDebugState = (): DebugState => DEBUG_STATES[debugState];
@@ -35,16 +36,20 @@ export const update = (): void => {
   fps.count++;
   if (getDebugState() !== DebugState.DEBUG_OFF) {
     if (fps.div !== null) fps.div.textContent = `${fps.avg}`;
-    if (chunks.div !== null) chunks.div.textContent = `${getNumChunks()}`;
-    if (pool.div !== null) pool.div.textContent = `${getChunkPoolSize()}`;
+    if (chunks.chunksDiv !== null) chunks.chunksDiv.textContent = `${getNumChunks()}`;
+    if (chunks.poolDiv !== null) chunks.poolDiv.textContent = `${getChunkPoolSize()}`;
+    if (wpos.wRowDiv !== null) wpos.wRowDiv.textContent = `${worldRow}`;
+    if (wpos.wColDiv !== null) wpos.wColDiv.textContent = `${worldCol}`;
     if (paused.div !== null) paused.div.textContent = isPaused() ? 'paused' : '';
   }
 };
 
 export const init = (): void => {
   fps.div = document.getElementById('fps');
-  chunks.div = document.getElementById('chunks');
-  pool.div = document.getElementById('pool');
+  chunks.chunksDiv = document.getElementById('chunks');
+  chunks.poolDiv = document.getElementById('pool');
+  wpos.wRowDiv = document.getElementById('wrow');
+  wpos.wColDiv = document.getElementById('wcol');
   paused.div = document.getElementById('paused');
   addListener(Input.DEBUG, cycleDebug);
   updateHtml();

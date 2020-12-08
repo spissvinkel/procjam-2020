@@ -193,6 +193,7 @@ h1, h2, h3, h4 {
 
 .debug-top-group .label {
   font-size: 0.75em;
+  letter-spacing: 0.15em;
   vertical-align: top;
   margin: 0px;
 }
@@ -227,6 +228,14 @@ h1, h2, h3, h4 {
 
 .debug-chunks .undervalue {
   color: rgba(0, 192, 192, 0.15);
+}
+
+.debug-wpos {
+  color: rgb(192, 192, 192);
+}
+
+.debug-wpos .undervalue {
+  color: rgba(192, 192, 192, 0.15);
 }
 
 .debug-fps {

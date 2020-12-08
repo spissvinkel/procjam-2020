@@ -3,8 +3,8 @@ import * as vec2 from '@spissvinkel/maths/vec2';
 
 import { addCellOffset, Drawable, mkTxDrawable, TX_SPECS, TxSpec, updateTxDrawable } from './drawable';
 import { addDrawable, Entity, mkBaseEntity } from './entity';
-import { addChunkKey } from './scene-mgr';
-import { Chunk, CHUNK_COLS, CHUNK_ROWS, getChunkByTopLeft, WORLD_COLS, WORLD_ROWS } from '../world-mgr';
+import { getWorldChunk } from './scene-mgr';
+import { Cell, CHUNK_COLS, CHUNK_ROWS, WORLD_COLS, WORLD_ROWS } from '../world-mgr';
 
 export interface Terrain extends Entity<Terrain> {
   worldRow: number; // centre
@@ -16,10 +16,12 @@ export interface Terrain extends Entity<Terrain> {
 export const TERRAIN_ROWS = 23;
 export const TERRAIN_COLS = 33;
 
-const HALF_ROWS = Math.floor(TERRAIN_ROWS / 2);
-const HALF_COLS = Math.floor(TERRAIN_COLS / 2);
-const TOP_LEFT_ROW =  HALF_COLS - HALF_ROWS;
-const TOP_LEFT_COL = -HALF_COLS - HALF_ROWS;
+const HALF_ROWS = Math.floor(TERRAIN_ROWS / 2); //  11
+const HALF_COLS = Math.floor(TERRAIN_COLS / 2); //  16
+const TOP_LEFT_ROW =  HALF_COLS - HALF_ROWS;    //   5
+const TOP_LEFT_COL = -HALF_COLS - HALF_ROWS;    // -27
+const BTM_RIGHT_ROW = HALF_ROWS - HALF_COLS;    // - 5
+const BTM_RIGHT_COL = HALF_COLS + HALF_ROWS;    //  27
 
 export const mkTerrain = (): Terrain => {
   const terrain = mkBaseEntity(true) as Terrain;
@@ -44,7 +46,18 @@ export const initTerrain = (terrain: Terrain): Terrain => {
   return terrain;
 };
 
-export const updateTerrain = (terrain: Terrain, worldRow: number, worldCol: number): Terrain => {
+const getCell = (worldRow: number, worldCol: number, row: number, col: number): Cell => {
+  let wRow = row + worldRow, wCol = col + worldCol;
+  if (wRow < 0) wRow += WORLD_ROWS; else if (wRow >= WORLD_ROWS) wRow -= WORLD_ROWS;
+  if (wCol < 0) wCol += WORLD_COLS; else if (wCol >= WORLD_COLS) wCol -= WORLD_COLS;
+  const top = Math.floor(wRow / CHUNK_ROWS) * CHUNK_ROWS, left = Math.floor(wCol / CHUNK_COLS) * CHUNK_COLS;
+  const chunk = getWorldChunk(top, left);
+  const { cells } = chunk;
+  const chRow = wRow - top, chCol = wCol - left;
+  return cells[chRow][chCol];
+};
+
+export const updateTerrain = (terrain: Terrain, wr: number, wc: number): Terrain => {
   const {
     BLOCK, BLOCK_DARK,
     TOP_SIDE_N, TOP_SIDE_E, TOP_SIDE_S, TOP_SIDE_W,
@@ -52,90 +65,68 @@ export const updateTerrain = (terrain: Terrain, worldRow: number, worldCol: numb
     TOP_IN_NW, TOP_IN_NE, TOP_IN_SW, TOP_IN_SE
   } = TX_SPECS;
   const { drawables } = terrain;
-  terrain.worldRow = worldRow;
-  terrain.worldCol = worldCol;
+  terrain.worldRow = wr;
+  terrain.worldCol = wc;
   let di = -1;
-  let chunk: Chunk | undefined = undefined;
   forEachCell((r, c) => {
     const d = drawables[++di];
     d.enabled = false;
-    let wRow = r + worldRow, wCol = c + worldCol;
-    if (wRow < 0) wRow += WORLD_ROWS; else if (wRow >= WORLD_ROWS) wRow -= WORLD_ROWS;
-    if (wCol < 0) wCol += WORLD_COLS; else if (wCol >= WORLD_COLS) wCol -= WORLD_COLS;
-    const top = Math.floor(wRow / CHUNK_ROWS) * CHUNK_ROWS, left = Math.floor(wCol / CHUNK_COLS) * CHUNK_COLS;
-    if (chunk === undefined || !(chunk.top === top && chunk.left === left)) {
-      chunk = getChunkByTopLeft(top, left);
-      addChunkKey(top, left);
-    }
-    const { cells } = chunk;
-    const chRow = wRow - top, chCol = wCol - left;
-    // console.log(`[updateTerrain] [${di}] (${r}, ${c}) (${wr}, ${wc})`);
     let txSpec: TxSpec | undefined = undefined;
-    const cell = cells[chRow][chCol];
-    if (!cell.ground) {
-      if (chRow < CHUNK_ROWS - 1 && chCol < CHUNK_COLS - 1
-          && cells[chRow + 1][chCol + 1].ground
-          && !cells[chRow + 1][chCol].ground
-          && !cells[chRow][chCol + 1].ground)
+    const cell = getCell(wr, wc, r, c);
+    if (cell.ground) txSpec = cell.even ? BLOCK_DARK : BLOCK;
+    else {
+      let gRm1Cm1: boolean | undefined = undefined;
+      let gRm1C  : boolean | undefined = undefined;
+      let gRm1Cp1: boolean | undefined = undefined;
+      let gRCm1  : boolean | undefined = undefined;
+      let gRCp1  : boolean | undefined = undefined;
+      let gRp1Cm1: boolean | undefined = undefined;
+      let gRp1C  : boolean | undefined = undefined;
+      let gRp1Cp1: boolean | undefined = undefined;
+      if ((gRp1Cp1 ?? (gRp1Cp1 = getCell(wr, wc, r + 1, c + 1).ground))
+          && !(gRp1C ?? (gRp1C = getCell(wr, wc, r + 1, c).ground))
+          && !(gRCp1 ?? (gRCp1 = getCell(wr, wc, r, c + 1).ground)))
         txSpec = TOP_OUT_NW;
-      else if (chRow < CHUNK_ROWS - 1 && chCol < CHUNK_COLS - 1
-          && cells[chRow + 1][chCol + 1].ground
-          && cells[chRow + 1][chCol].ground
-          && cells[chRow][chCol + 1].ground)
+      else if ((gRp1C ?? (gRp1C = getCell(wr, wc, r + 1, c).ground))
+          && (gRCp1 ?? (gRCp1 = getCell(wr, wc, r, c + 1).ground)))
         txSpec = TOP_IN_NW;
-      else if (chRow < CHUNK_ROWS - 1 && chCol > 0
-          && cells[chRow + 1][chCol - 1].ground
-          && !cells[chRow + 1][chCol].ground
-          && !cells[chRow][chCol - 1].ground)
+      else if ((gRp1Cm1 ?? (gRp1Cm1 = getCell(wr, wc, r + 1, c - 1).ground))
+          && !(gRp1C ?? (gRp1C = getCell(wr, wc, r + 1, c).ground))
+          && !(gRCm1 ?? (gRCm1 = getCell(wr, wc, r, c - 1).ground)))
         txSpec = TOP_OUT_NE;
-      else if (chRow < CHUNK_ROWS - 1 && chCol > 0
-          && cells[chRow + 1][chCol - 1].ground
-          && cells[chRow + 1][chCol].ground
-          && cells[chRow][chCol - 1].ground)
+      else if ((gRp1C ?? (gRp1C = getCell(wr, wc, r + 1, c).ground))
+          && (gRCm1 ?? (gRCm1 = getCell(wr, wc, r, c - 1).ground)))
         txSpec = TOP_IN_NE;
-      else if (chRow > 0 && chCol > 0
-          && cells[chRow - 1][chCol - 1].ground
-          && !cells[chRow - 1][chCol].ground
-          && !cells[chRow][chCol - 1].ground)
+      else if ((gRm1Cm1 ?? (gRm1Cm1 = getCell(wr, wc, r - 1, c - 1).ground))
+          && !(gRm1C ?? (gRm1C = getCell(wr, wc, r - 1, c).ground))
+          && !(gRCm1 ?? (gRCm1 = getCell(wr, wc, r, c - 1).ground)))
         txSpec = TOP_OUT_SE;
-      else if (chRow > 0 && chCol > 0
-          && cells[chRow - 1][chCol - 1].ground
-          && cells[chRow - 1][chCol].ground
-          && cells[chRow][chCol - 1].ground)
+      else if ((gRm1C ?? (gRm1C = getCell(wr, wc, r - 1, c).ground))
+          && (gRCm1 ?? (gRCm1 = getCell(wr, wc, r, c - 1).ground)))
         txSpec = TOP_IN_SE;
-      else if (chRow > 0 && chCol < CHUNK_COLS - 1
-          && cells[chRow - 1][chCol + 1].ground
-          && !cells[chRow - 1][chCol].ground
-          && !cells[chRow][chCol + 1].ground)
+      else if ((gRm1Cp1 ?? (gRm1Cp1 = getCell(wr, wc, r - 1, c + 1).ground))
+          && !(gRm1C ?? (gRm1C = getCell(wr, wc, r - 1, c).ground))
+          && !(gRCp1 ?? (gRCp1 = getCell(wr, wc, r, c + 1).ground)))
         txSpec = TOP_OUT_SW;
-      else if (chRow > 0 && chCol < CHUNK_COLS - 1
-          && cells[chRow - 1][chCol + 1].ground
-          && cells[chRow - 1][chCol].ground
-          && cells[chRow][chCol + 1].ground)
+      else if ((gRm1C ?? (gRm1C = getCell(wr, wc, r - 1, c).ground))
+          && (gRCp1 ?? (gRCp1 = getCell(wr, wc, r, c + 1).ground)))
         txSpec = TOP_IN_SW;
-      else if (chRow < CHUNK_ROWS - 1
-          && cells[chRow + 1][chCol].ground
-          && (chCol === 0 || !cells[chRow][chCol - 1].ground)
-          && (chCol === CHUNK_COLS - 1 || !cells[chRow][chCol + 1].ground))
+      else if ((gRp1C ?? (gRp1C = getCell(wr, wc, r + 1, c).ground))
+          && !(gRCm1 ?? (gRCm1 = getCell(wr, wc, r, c - 1).ground))
+          && !(gRCp1 ?? (gRCp1 = getCell(wr, wc, r, c + 1).ground)))
         txSpec = TOP_SIDE_N;
-      else if (chCol > 0
-          && cells[chRow][chCol - 1].ground
-          && (chRow === 0 || !cells[chRow - 1][chCol].ground)
-          && (chRow === CHUNK_ROWS - 1 || !cells[chRow + 1][chCol].ground))
+      else if ((gRCm1 ?? (gRCm1 = getCell(wr, wc, r, c - 1).ground))
+          && !(gRm1C ?? (gRm1C = getCell(wr, wc, r - 1, c).ground))
+          && !(gRp1C ?? (gRp1C = getCell(wr, wc, r + 1, c).ground)))
         txSpec = TOP_SIDE_E;
-      else if (chRow > 0
-          && cells[chRow - 1][chCol].ground
-          && (chCol === 0 || !cells[chRow][chCol - 1].ground)
-          && (chCol === CHUNK_COLS - 1 || !cells[chRow][chCol + 1].ground))
+      else if ((gRm1C ?? (gRm1C = getCell(wr, wc, r - 1, c).ground))
+          && !(gRCm1 ?? (gRCm1 = getCell(wr, wc, r, c - 1).ground))
+          && !(gRCp1 ?? (gRCp1 = getCell(wr, wc, r, c + 1).ground)))
         txSpec = TOP_SIDE_S;
-      else if (chCol < CHUNK_COLS - 1
-          && cells[chRow][chCol + 1].ground
-          && (chRow === 0 || !cells[chRow - 1][chCol].ground)
-          && (chRow === CHUNK_ROWS - 1 || !cells[chRow + 1][chCol].ground))
+      else if ((gRCp1 ?? (gRCp1 = getCell(wr, wc, r, c + 1).ground))
+          && !(gRm1C ?? (gRm1C = getCell(wr, wc, r - 1, c).ground))
+          && !(gRp1C ?? (gRp1C = getCell(wr, wc, r + 1, c).ground)))
         txSpec = TOP_SIDE_W;
-    } else {
-      const dark = chRow % 2 === chCol % 2;
-      txSpec = dark ? BLOCK_DARK : BLOCK;
     }
     if (txSpec !== undefined && d.txInfo !== undefined) {
       const { txId } = txSpec;

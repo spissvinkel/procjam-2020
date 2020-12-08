@@ -3,7 +3,7 @@ import * as vec2 from '@spissvinkel/maths/vec2';
 
 import { addCellOffset, Drawable, mkTxDrawable, TX_SPECS, TxSpec, updateTxDrawable } from './drawable';
 import { addDrawable, Entity, mkBaseEntity } from './entity';
-import { Chunk, CHUNK_COLS, CHUNK_ROWS, getChunkByTopLeft, ItemType, WORLD_COLS, WORLD_ROWS } from '../world-mgr';
+import { Chunk, CHUNK_COLS, CHUNK_ROWS, getChunk, ItemType, WORLD_COLS, WORLD_ROWS } from '../world-mgr';
 
 export interface Items extends Entity<Items> {
   worldRow: number; // centre
@@ -59,7 +59,7 @@ export const updateItems = (items: Items, worldRow: number, worldCol: number): I
     if (wRow < 0) wRow += WORLD_ROWS; else if (wRow >= WORLD_ROWS) wRow -= WORLD_ROWS;
     if (wCol < 0) wCol += WORLD_COLS; else if (wCol >= WORLD_COLS) wCol -= WORLD_COLS;
     const top = Math.floor(wRow / CHUNK_ROWS) * CHUNK_ROWS, left = Math.floor(wCol / CHUNK_COLS) * CHUNK_COLS;
-    if (chunk === undefined || !(chunk.top === top && chunk.left === left)) chunk = getChunkByTopLeft(top, left);
+    if (chunk === undefined || !(chunk.top === top && chunk.left === left)) chunk = getChunk(top, left);
     const { cells } = chunk;
     const chRow = wRow - top, chCol = wCol - left;
     // console.log(`[updateTerrain] [${di}] (${r}, ${c}) (${wr}, ${wc})`);
