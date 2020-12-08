@@ -20,8 +20,8 @@ const HALF_ROWS = Math.floor(TERRAIN_ROWS / 2); //  11
 const HALF_COLS = Math.floor(TERRAIN_COLS / 2); //  16
 const TOP_LEFT_ROW =  HALF_COLS - HALF_ROWS;    //   5
 const TOP_LEFT_COL = -HALF_COLS - HALF_ROWS;    // -27
-const BTM_RIGHT_ROW = HALF_ROWS - HALF_COLS;    // - 5
-const BTM_RIGHT_COL = HALF_COLS + HALF_ROWS;    //  27
+// const BTM_RIGHT_ROW = HALF_ROWS - HALF_COLS;    // - 5
+// const BTM_RIGHT_COL = HALF_COLS + HALF_ROWS;    //  27
 
 export const mkTerrain = (): Terrain => {
   const terrain = mkBaseEntity(true) as Terrain;
