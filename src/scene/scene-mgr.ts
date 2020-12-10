@@ -3,20 +3,17 @@ import { DebugState, getDebugState } from '../debug/debug-mgr';
 import { Viewport } from '../engine';
 import { BaseEntity, cleanEntity, updateEntity } from './entity';
 import { Feedback, mkFeedback, initFeedback, updateFeedback } from './feedback';
-import { Grid } from './grid';
-import { adjustWorldCol, adjustWorldRow, freeWorldChunks, getWorldCell } from './grid-mgr';
-import { mkItems, initItems, updateItems } from './items';
+import { Grid, initGrid, mkGrid, updateGridCells } from './grid';
+import { adjustWorldCol, adjustWorldRow, freeWorldChunks, getWorldCell } from '../grid-mgr';
 import { initOutlines, mkOutlines, updateOutlines } from '../debug/outlines';
-import { initPlayer, mkPlayer, Player, updatePlayer } from './player';
-import { initTerrain, mkTerrain, updateTerrain } from './terrain';
+import { initPlayer, mkPlayer, Player } from './player';
 import { getDeltaTimeSeconds } from '../time-mgr';
 import { CHUNK_COLS, CHUNK_ROWS, ItemType } from '../world-mgr';
 
 export interface Scene {
   entities: BaseEntity[];
-  terrain : Grid;
+  grid    : Grid;
   feedback: Feedback;
-  items   : Grid;
   player  : Player;
   outlines: BaseEntity;
   camera  : Camera;
@@ -24,9 +21,8 @@ export interface Scene {
 
 const scene: Scene = {
   entities: [ ],
-  terrain : mkTerrain(),
+  grid    : mkGrid(),
   feedback: mkFeedback(),
-  items   : mkItems(),
   player  : mkPlayer(),
   outlines: mkOutlines(),
   camera  : mkCamera(),
@@ -66,18 +62,15 @@ export const init = (): void => {
 };
 
 const initEntities = (): void => {
-  const { terrain, feedback, items, player, outlines } = scene;
-  addEntity(initTerrain(terrain));
+  const { grid, feedback, player, outlines } = scene;
+  addEntity(initGrid(grid));
   addEntity(initFeedback(feedback));
   addEntity(initOutlines(outlines));
-  addEntity(initItems(items));
   addEntity(initPlayer(player));
   // TODO: refactor this
-  updateTerrain(terrain, worldRow, worldCol);
   updateFeedback(feedback, worldRow, worldCol, feedbackRow, feedbackCol);
+  updateGridCells(grid, worldRow, worldCol);
   updateOutlines(outlines, worldRow, worldCol);
-  updateItems(items, worldRow, worldCol);
-  updatePlayer(player, worldRow, worldCol, playerRow, playerCol);
   freeWorldChunks();
 };
 
@@ -89,9 +82,7 @@ export const addEntity = (entity: BaseEntity): void => { scene.entities.push(ent
 // eslint-disable-next-line prefer-const
 export let worldRow = Math.floor(CHUNK_ROWS / 2), worldCol = Math.floor(CHUNK_COLS / 2);
 // eslint-disable-next-line prefer-const
-export let feedbackRow = worldRow, feedbackCol = worldCol;
-// eslint-disable-next-line prefer-const
-export let playerRow = worldRow, playerCol = worldCol;
+export let feedbackRow = 0, feedbackCol = 0;
 
 /**
  *
@@ -99,15 +90,13 @@ export let playerRow = worldRow, playerCol = worldCol;
  * @param col terrain relative column (0 is middle of terrain)
  */
 export const gridClick = (gridRow: number, gridCol: number): void => {
-  const { terrain, feedback, items, player, outlines } = getScene();
+  const { grid, feedback, outlines } = getScene();
   const { ground, item } = getWorldCell(worldRow, worldCol, gridRow, gridCol);
   if (!ground || item !== ItemType.EMPTY) return;
   worldRow = adjustWorldRow(worldRow, gridRow);
   worldCol = adjustWorldCol(worldCol, gridCol);
-  updateTerrain(terrain, worldRow, worldCol);
-  updateFeedback(feedback, worldRow, worldCol, feedbackRow = worldRow, feedbackCol = worldCol);
+  updateFeedback(feedback, worldRow, worldCol, feedbackRow = 0, feedbackCol = 0);
+  updateGridCells(grid, worldRow, worldCol);
   if (getDebugState() !== DebugState.DEBUG_OFF) updateOutlines(outlines, worldRow, worldCol);
-  updateItems(items, worldRow, worldCol);
-  updatePlayer(player, worldRow, worldCol, playerRow = worldRow, playerCol = worldCol);
   freeWorldChunks();
 };

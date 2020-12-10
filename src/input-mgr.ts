@@ -7,28 +7,13 @@ import { Viewport } from './engine';
 import { getScene, gridClick } from './scene/scene-mgr';
 
 export const enum Input {
-  DEBUG       = '|',
-  PAUSE       = 'tab',
-  P1_LEFT     = 'a',
-  P1_RIGHT    = 'd',
-  P1_THRUSTER = 'w',
-  P1_FIRE     = 'enter',
-  P1_BOMB     = 'shift',
-  P1_JUMP     = 'space',
+  DEBUG = '|',
+  PAUSE = 'tab',
 
-  TEST_UP_1      = 'up',
-  TEST_DOWN_1    = 'down',
-  TEST_LEFT_1    = 'left',
-  TEST_RIGHT_1   = 'right',
-  TEST_R_LEFT_1  = 'q',
-  TEST_R_RIGHT_1 = 'e',
-
-  TEST_UP_2      = 'shift-up',
-  TEST_DOWN_2    = 'shift-down',
-  TEST_LEFT_2    = 'shift-left',
-  TEST_RIGHT_2   = 'shift-right',
-  TEST_R_LEFT_2  = 'shift-q',
-  TEST_R_RIGHT_2 = 'shift-e'
+  P1_UP    = 'w',
+  P1_LEFT  = 'a',
+  P1_DOWN  = 's',
+  P1_RIGHT = 'd',
 }
 
 export type Callback = () => void
@@ -324,16 +309,16 @@ const onTouchEvent = (event: TouchEvent): void => {
 const resizeTouchInput = (): void => touchBtns.forEach(resizeTouchBtn);
 
 const initTouchInput = (): void => {
-  const overlay = document.getElementById('overlay');
-  if (overlay !== null) {
-    overlay.addEventListener('touchstart',  onTouchEvent, false);
-    overlay.addEventListener('touchmove',   onTouchEvent, false);
-    overlay.addEventListener('touchend',    onTouchEvent, false);
-    overlay.addEventListener('touchcancel', onTouchEvent, false);
-    addTouchBtn('btn-left',  Input.P1_LEFT);
-    addTouchBtn('btn-right', Input.P1_RIGHT);
-    addTouchBtn('btn-jump',  Input.P1_JUMP);
-  }
+  // const overlay = document.getElementById('overlay');
+  // if (overlay !== null) {
+  //   overlay.addEventListener('touchstart',  onTouchEvent, false);
+  //   overlay.addEventListener('touchmove',   onTouchEvent, false);
+  //   overlay.addEventListener('touchend',    onTouchEvent, false);
+  //   overlay.addEventListener('touchcancel', onTouchEvent, false);
+  //   addTouchBtn('btn-left',  Input.P1_LEFT);
+  //   addTouchBtn('btn-right', Input.P1_RIGHT);
+  //   addTouchBtn('btn-jump',  Input.P1_JUMP);
+  // }
 };
 
 
@@ -423,23 +408,24 @@ const pollGamepad = (): void => {
 };
 
 const initGamepadInput = (): void => {
-  addGamepadBtn(GamePadType.XINPUT,  0, Input.P1_FIRE);
-  addGamepadBtn(GamePadType.XINPUT,  1, Input.P1_THRUSTER);
-  addGamepadBtn(GamePadType.XINPUT,  2, Input.P1_JUMP);
-  addGamepadBtn(GamePadType.XINPUT,  3, Input.P1_BOMB);
   addGamepadBtn(GamePadType.XINPUT,  8, Input.DEBUG);
-  addGamepadBtn(GamePadType.XINPUT,  9, Input.PAUSE);
+  // addGamepadBtn(GamePadType.XINPUT,  9, Input.PAUSE);
+  addGamepadBtn(GamePadType.XINPUT, 12, Input.P1_UP);
+  addGamepadBtn(GamePadType.XINPUT, 13, Input.P1_DOWN);
   addGamepadBtn(GamePadType.XINPUT, 14, Input.P1_LEFT);
   addGamepadBtn(GamePadType.XINPUT, 15, Input.P1_RIGHT);
   addGamepadAxis(GamePadType.XINPUT, 0, true, -AXIS_MIN_VAL, Input.P1_LEFT);
   addGamepadAxis(GamePadType.XINPUT, 0, false, AXIS_MIN_VAL, Input.P1_RIGHT);
+  addGamepadAxis(GamePadType.XINPUT, 1, true, -AXIS_MIN_VAL, Input.P1_UP);
+  addGamepadAxis(GamePadType.XINPUT, 1, false, AXIS_MIN_VAL, Input.P1_DOWN);
 
-  addGamepadBtn(GamePadType.RUMBLEPAD,  0, Input.P1_JUMP);
-  addGamepadBtn(GamePadType.RUMBLEPAD,  1, Input.P1_FIRE);
-  addGamepadBtn(GamePadType.RUMBLEPAD,  2, Input.P1_THRUSTER);
-  addGamepadBtn(GamePadType.RUMBLEPAD,  3, Input.P1_BOMB);
-  addGamepadBtn(GamePadType.RUMBLEPAD,  8, Input.DEBUG);
-  addGamepadBtn(GamePadType.RUMBLEPAD,  9, Input.PAUSE);
-  addGamepadAxis(GamePadType.RUMBLEPAD, 0, true, -AXIS_MIN_VAL, Input.P1_LEFT);
-  addGamepadAxis(GamePadType.RUMBLEPAD, 0, false, AXIS_MIN_VAL, Input.P1_RIGHT);
+  // TODO: deprecated
+  // addGamepadBtn(GamePadType.RUMBLEPAD,  0, Input.P1_JUMP);
+  // addGamepadBtn(GamePadType.RUMBLEPAD,  1, Input.P1_FIRE);
+  // addGamepadBtn(GamePadType.RUMBLEPAD,  2, Input.P1_THRUSTER);
+  // addGamepadBtn(GamePadType.RUMBLEPAD,  3, Input.P1_BOMB);
+  // addGamepadBtn(GamePadType.RUMBLEPAD,  8, Input.DEBUG);
+  // addGamepadBtn(GamePadType.RUMBLEPAD,  9, Input.PAUSE);
+  // addGamepadAxis(GamePadType.RUMBLEPAD, 0, true, -AXIS_MIN_VAL, Input.P1_LEFT);
+  // addGamepadAxis(GamePadType.RUMBLEPAD, 0, false, AXIS_MIN_VAL, Input.P1_RIGHT);
 };

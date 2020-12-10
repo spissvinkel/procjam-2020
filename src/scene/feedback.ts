@@ -1,35 +1,22 @@
+import { Vec2 } from '@spissvinkel/maths';
 import * as vec2 from '@spissvinkel/maths/vec2';
-import * as vec4 from '@spissvinkel/maths/vec4';
 
-import { Entity, mkBaseEntity, addDrawable } from './entity';
-import { addCellOffset, mkPathDrawable, PX_SCALE, JoinStyle } from './drawable';
+import { Entity, mkBaseEntity } from './entity';
+import { addCellOffset, TxSpec, TX_SPECS } from './drawable';
 
 export interface Feedback extends Entity<Feedback> {
-  worldRow: number; // centre
-  worldCol: number; // centre
-  row     : number; // position
-  col     : number; // position
+  gridRow: number; // position
+  gridCol: number; // position
+  offset: Vec2;
+  txSpec: TxSpec;
 }
-
-const HALF_WIDTH  = 67.0 * PX_SCALE;
-const HALF_HEIGHT = 46.5 * PX_SCALE;
-const Y_OFFSET    =  0.5 * PX_SCALE;
-const LINE_WIDTH  =  7.0 * PX_SCALE;
 
 export const mkFeedback = (): Feedback => {
   const feedback = mkBaseEntity(true) as Feedback;
-  feedback.worldRow = 0;
-  feedback.worldCol = 0;
-  feedback.row = 0;
-  feedback.col = 0;
-  const points = [ vec2.of(-HALF_WIDTH, 0), vec2.of(0, -HALF_HEIGHT), vec2.of(HALF_WIDTH, 0), vec2.of(0, HALF_HEIGHT) ];
-  const { offset, pathInfo } = addDrawable(feedback, mkPathDrawable(points, true));
-  offset.y += Y_OFFSET;
-  if (pathInfo !== undefined) {
-    vec4.set(pathInfo.colour, 1.0, 1.0, 1.0, 0.75);
-    pathInfo.width = LINE_WIDTH;
-    pathInfo.joinStyle = JoinStyle.ROUND;
-  }
+  feedback.gridRow = 0;
+  feedback.gridCol = 0;
+  feedback.offset = vec2.zero();
+  feedback.txSpec = TX_SPECS.FEEDBACK;
   return feedback;
 };
 
@@ -37,12 +24,11 @@ export const initFeedback = (feedback: Feedback): Feedback => {
   return feedback;
 };
 
-export const updateFeedback = (feedback: Feedback, worldRow: number, worldCol: number, row: number, col: number): Feedback => {
-  feedback.worldRow = worldRow;
-  feedback.worldCol = worldCol;
-  feedback.row = row;
-  feedback.col = col;
-  addCellOffset(vec2.setZero(feedback.position), row - worldRow, col - worldCol);
-  feedback.dirty = true;
+export const updateFeedback = (
+  feedback: Feedback, worldRow: number, worldCol: number, gridRow: number, gridCol: number
+): Feedback => {
+  feedback.gridRow = gridRow;
+  feedback.gridCol = gridCol;
+  addCellOffset(vec2.setZero(feedback.position), gridRow - worldRow, gridCol - worldCol);
   return feedback;
 };

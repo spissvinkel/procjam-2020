@@ -1,5 +1,5 @@
-import { addToList, clearList, mkArrayList } from '../utils';
-import { Cell, Chunk, CHUNK_COLS, CHUNK_ROWS, freeChunk, getChunk, WORLD_COLS, WORLD_ROWS } from '../world-mgr';
+import { addToList, clearList, mkArrayList } from './utils';
+import { Cell, Chunk, CHUNK_COLS, CHUNK_ROWS, freeChunk, getChunk, WORLD_COLS, WORLD_ROWS } from './world-mgr';
 
 export const GRID_ROWS = 23;
 export const GRID_COLS = 33;

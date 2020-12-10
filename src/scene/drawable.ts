@@ -42,6 +42,8 @@ const mkTxSpec = (txId: string, xOffset: number, yOffset: number): TxSpec => {
 };
 
 export const TX_SPECS = {
+  FEEDBACK  : mkTxSpec('feedback',                     -75,   54.5),
+
   BLOCK     : mkTxSpec('cliff-brown-block-quarter',    -75,   54.5),
   BLOCK_DARK: mkTxSpec('cliff-brown-block-quart-dark', -75,   54.5),
 

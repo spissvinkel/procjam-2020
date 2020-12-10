@@ -79,7 +79,7 @@ export const updateOutlines = (outlines: BaseEntity, worldRow: number, worldCol:
   }
 
   while (di < drawables.length) drawables[di++].enabled = false;
-  outlines.dirty = true;
+
   return outlines;
 };
 
