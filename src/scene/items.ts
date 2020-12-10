@@ -62,7 +62,6 @@ export const updateItems = (items: Items, worldRow: number, worldCol: number): I
     if (chunk === undefined || !(chunk.top === top && chunk.left === left)) chunk = getChunk(top, left);
     const { cells } = chunk;
     const chRow = wRow - top, chCol = wCol - left;
-    // console.log(`[updateTerrain] [${di}] (${r}, ${c}) (${wr}, ${wc})`);
     let txSpec: TxSpec | undefined = undefined;
     const { ground, item } = cells[chRow][chCol];
     if (ground) {

@@ -16,12 +16,10 @@ export interface Terrain extends Entity<Terrain> {
 export const TERRAIN_ROWS = 23;
 export const TERRAIN_COLS = 33;
 
-const HALF_ROWS = Math.floor(TERRAIN_ROWS / 2); //  11
-const HALF_COLS = Math.floor(TERRAIN_COLS / 2); //  16
-const TOP_LEFT_ROW =  HALF_COLS - HALF_ROWS;    //   5
-const TOP_LEFT_COL = -HALF_COLS - HALF_ROWS;    // -27
-// const BTM_RIGHT_ROW = HALF_ROWS - HALF_COLS;    // - 5
-// const BTM_RIGHT_COL = HALF_COLS + HALF_ROWS;    //  27
+const HALF_ROWS = Math.floor(TERRAIN_ROWS / 2);
+const HALF_COLS = Math.floor(TERRAIN_COLS / 2);
+const TOP_LEFT_ROW =  HALF_COLS - HALF_ROWS;
+const TOP_LEFT_COL = -HALF_COLS - HALF_ROWS;
 
 export const mkTerrain = (): Terrain => {
   const terrain = mkBaseEntity(true) as Terrain;
@@ -75,6 +73,7 @@ export const updateTerrain = (terrain: Terrain, wr: number, wc: number): Terrain
     const cell = getCell(wr, wc, r, c);
     if (cell.ground) txSpec = cell.even ? BLOCK_DARK : BLOCK;
     else {
+      // TODO: use pattern of 8 cells -> 256 LUT
       let gRm1Cm1: boolean | undefined = undefined;
       let gRm1C  : boolean | undefined = undefined;
       let gRm1Cp1: boolean | undefined = undefined;
@@ -87,43 +86,50 @@ export const updateTerrain = (terrain: Terrain, wr: number, wc: number): Terrain
           && !(gRp1C ?? (gRp1C = getCell(wr, wc, r + 1, c).ground))
           && !(gRCp1 ?? (gRCp1 = getCell(wr, wc, r, c + 1).ground)))
         txSpec = TOP_OUT_NW;
-      else if ((gRp1C ?? (gRp1C = getCell(wr, wc, r + 1, c).ground))
+      if ((gRp1C ?? (gRp1C = getCell(wr, wc, r + 1, c).ground))
           && (gRCp1 ?? (gRCp1 = getCell(wr, wc, r, c + 1).ground)))
         txSpec = TOP_IN_NW;
-      else if ((gRp1Cm1 ?? (gRp1Cm1 = getCell(wr, wc, r + 1, c - 1).ground))
+      if ((gRp1Cm1 ?? (gRp1Cm1 = getCell(wr, wc, r + 1, c - 1).ground))
           && !(gRp1C ?? (gRp1C = getCell(wr, wc, r + 1, c).ground))
           && !(gRCm1 ?? (gRCm1 = getCell(wr, wc, r, c - 1).ground)))
         txSpec = TOP_OUT_NE;
-      else if ((gRp1C ?? (gRp1C = getCell(wr, wc, r + 1, c).ground))
+      if ((gRp1C ?? (gRp1C = getCell(wr, wc, r + 1, c).ground))
           && (gRCm1 ?? (gRCm1 = getCell(wr, wc, r, c - 1).ground)))
         txSpec = TOP_IN_NE;
-      else if ((gRm1Cm1 ?? (gRm1Cm1 = getCell(wr, wc, r - 1, c - 1).ground))
+      if ((gRm1Cm1 ?? (gRm1Cm1 = getCell(wr, wc, r - 1, c - 1).ground))
           && !(gRm1C ?? (gRm1C = getCell(wr, wc, r - 1, c).ground))
           && !(gRCm1 ?? (gRCm1 = getCell(wr, wc, r, c - 1).ground)))
         txSpec = TOP_OUT_SE;
-      else if ((gRm1C ?? (gRm1C = getCell(wr, wc, r - 1, c).ground))
-          && (gRCm1 ?? (gRCm1 = getCell(wr, wc, r, c - 1).ground)))
-        txSpec = TOP_IN_SE;
-      else if ((gRm1Cp1 ?? (gRm1Cp1 = getCell(wr, wc, r - 1, c + 1).ground))
+
+      if (
+        ((gRm1C ?? (gRm1C = getCell(wr, wc, r - 1, c).ground))
+          && ((gRCm1 ?? (gRCm1 = getCell(wr, wc, r, c - 1).ground))
+            || (gRp1Cm1 ?? (gRp1Cm1 = getCell(wr, wc, r + 1, c - 1).ground))))
+        || ((gRCm1 ?? (gRCm1 = getCell(wr, wc, r, c - 1).ground))
+          && ((gRm1C ?? (gRm1C = getCell(wr, wc, r - 1, c).ground))
+            || (gRm1Cp1 ?? (gRm1Cp1 = getCell(wr, wc, r - 1, c + 1).ground))))
+      ) txSpec = TOP_IN_SE;
+
+      if ((gRm1Cp1 ?? (gRm1Cp1 = getCell(wr, wc, r - 1, c + 1).ground))
           && !(gRm1C ?? (gRm1C = getCell(wr, wc, r - 1, c).ground))
           && !(gRCp1 ?? (gRCp1 = getCell(wr, wc, r, c + 1).ground)))
         txSpec = TOP_OUT_SW;
-      else if ((gRm1C ?? (gRm1C = getCell(wr, wc, r - 1, c).ground))
+      if ((gRm1C ?? (gRm1C = getCell(wr, wc, r - 1, c).ground))
           && (gRCp1 ?? (gRCp1 = getCell(wr, wc, r, c + 1).ground)))
         txSpec = TOP_IN_SW;
-      else if ((gRp1C ?? (gRp1C = getCell(wr, wc, r + 1, c).ground))
+      if ((gRp1C ?? (gRp1C = getCell(wr, wc, r + 1, c).ground))
           && !(gRCm1 ?? (gRCm1 = getCell(wr, wc, r, c - 1).ground))
           && !(gRCp1 ?? (gRCp1 = getCell(wr, wc, r, c + 1).ground)))
         txSpec = TOP_SIDE_N;
-      else if ((gRCm1 ?? (gRCm1 = getCell(wr, wc, r, c - 1).ground))
+      if ((gRCm1 ?? (gRCm1 = getCell(wr, wc, r, c - 1).ground))
           && !(gRm1C ?? (gRm1C = getCell(wr, wc, r - 1, c).ground))
           && !(gRp1C ?? (gRp1C = getCell(wr, wc, r + 1, c).ground)))
         txSpec = TOP_SIDE_E;
-      else if ((gRm1C ?? (gRm1C = getCell(wr, wc, r - 1, c).ground))
+      if ((gRm1C ?? (gRm1C = getCell(wr, wc, r - 1, c).ground))
           && !(gRCm1 ?? (gRCm1 = getCell(wr, wc, r, c - 1).ground))
           && !(gRCp1 ?? (gRCp1 = getCell(wr, wc, r, c + 1).ground)))
         txSpec = TOP_SIDE_S;
-      else if ((gRCp1 ?? (gRCp1 = getCell(wr, wc, r, c + 1).ground))
+      if ((gRCp1 ?? (gRCp1 = getCell(wr, wc, r, c + 1).ground))
           && !(gRm1C ?? (gRm1C = getCell(wr, wc, r - 1, c).ground))
           && !(gRp1C ?? (gRp1C = getCell(wr, wc, r + 1, c).ground)))
         txSpec = TOP_SIDE_W;

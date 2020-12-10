@@ -1,3 +1,6 @@
+import { Vec3, Vec4 } from '@spissvinkel/maths';
+
+
 // ----- HTML -----
 
 export type ElementIterator<E extends Element> = (fn: (e: E) => void) => (es: HTMLCollectionOf<E>) => void;
@@ -9,6 +12,34 @@ export const show = <E extends Element> (e: E): void => e.classList.remove('hidd
 
 export const hideAll = forEachElement(hide);
 export const showAll = forEachElement(show);
+
+
+// ----- Colours -----
+
+export const ONE_BY_255 = 1.0 / 255;
+
+export const setHexRGB = <V extends Vec3 | Vec4> (hex: string, colour: V): V => {
+  const re = /^#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/;
+  const result = re.exec(hex);
+  if (result !== null) {
+    colour.x = parseInt(result[1], 16) * ONE_BY_255;
+    colour.y = parseInt(result[2], 16) * ONE_BY_255;
+    colour.z = parseInt(result[3], 16) * ONE_BY_255;
+  }
+  return colour;
+};
+
+export const setHexRGBA = (hex: string, colour: Vec4): Vec4 => {
+  const re = /^#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/;
+  const result = re.exec(hex);
+  if (result !== null) {
+    colour.x = parseInt(result[1], 16) * ONE_BY_255;
+    colour.y = parseInt(result[2], 16) * ONE_BY_255;
+    colour.z = parseInt(result[3], 16) * ONE_BY_255;
+    colour.w = parseInt(result[4], 16) * ONE_BY_255;
+  }
+  return colour;
+};
 
 
 // ----- Collections -----

@@ -6,8 +6,9 @@ import { Items, mkItems, initItems, updateItems } from './items';
 import { initPlayer, mkPlayer, Player, updatePlayer } from './player';
 import { initTerrain, mkTerrain, Terrain, updateTerrain } from './terrain';
 import { getDeltaTimeSeconds } from '../time-mgr';
-import { addToList, clearList, mkArrayList } from '../utils';
-import { Chunk, CHUNK_COLS, CHUNK_ROWS, freeChunk, getChunk, WORLD_COLS, WORLD_ROWS } from '../world-mgr';
+import { addToList, ArrayList, clearList, mkArrayList } from '../utils';
+import { Chunk, CHUNK_COLS, CHUNK_ROWS, freeChunk, getChunk, ItemType, WORLD_COLS, WORLD_ROWS } from '../world-mgr';
+import { initOutlines, mkOutlines, updateOutlines } from '../debug/outlines';
 
 export interface Scene {
   entities: BaseEntity[];
@@ -15,6 +16,7 @@ export interface Scene {
   feedback: Feedback;
   items   : Items;
   player  : Player;
+  outlines: BaseEntity;
   camera  : Camera;
 }
 
@@ -24,6 +26,7 @@ const scene: Scene = {
   feedback: mkFeedback(),
   items   : mkItems(),
   player  : mkPlayer(),
+  outlines: mkOutlines(),
   camera  : mkCamera(),
 };
 
@@ -45,19 +48,19 @@ export let playerRow = worldRow, playerCol = worldCol;
  * @param col terrain relative column (0 is middle of terrain)
  */
 export const gridClick = (row: number, col: number): void => {
-  // console.log(`[gridClick] row=${row}, col=${col}, worldRow=${worldRow}, worldCol=${worldCol}`);
-  const { terrain, feedback, items, player } = scene;
+  const { terrain, feedback, items, player, outlines } = scene;
   let wRow = worldRow + row, wCol = worldCol + col;
   if (wRow < 0) wRow += WORLD_ROWS; else if (wRow >= WORLD_ROWS) wRow -= WORLD_ROWS;
   if (wCol < 0) wCol += WORLD_COLS; else if (wCol >= WORLD_COLS) wCol -= WORLD_COLS;
-  // const top = Math.floor(wRow / CHUNK_ROWS) * CHUNK_ROWS, left = Math.floor(wCol / CHUNK_COLS) * CHUNK_COLS;
-  // const chRow = wRow - top, chCol = wCol - left;
-  // const { ground, item } = getChunk(top, left).cells[chRow][chCol];
-  // if (!ground || item !== ItemType.EMPTY) return;
+  const top = Math.floor(wRow / CHUNK_ROWS) * CHUNK_ROWS, left = Math.floor(wCol / CHUNK_COLS) * CHUNK_COLS;
+  const chRow = wRow - top, chCol = wCol - left;
+  const { ground, item } = getChunk(top, left).cells[chRow][chCol];
+  if (!ground || item !== ItemType.EMPTY) return;
   worldRow = wRow;
   worldCol = wCol;
   updateTerrain(terrain, worldRow, worldCol);
   updateFeedback(feedback, worldRow, worldCol, feedbackRow = worldRow, feedbackCol = worldCol);
+  updateOutlines(outlines, worldRow, worldCol);
   updateItems(items, worldRow, worldCol);
   updatePlayer(player, worldRow, worldCol, playerRow = worldRow, playerCol = worldCol);
   freeChunks();
@@ -95,13 +98,15 @@ export const init = (): void => {
 };
 
 const initEntities = (): void => {
-  const { terrain, feedback, items, player } = scene;
+  const { terrain, feedback, items, player, outlines } = scene;
   addEntity(initTerrain(terrain));
   addEntity(initFeedback(feedback));
+  addEntity(initOutlines(outlines));
   addEntity(initItems(items));
   addEntity(initPlayer(player));
   updateTerrain(terrain, worldRow, worldCol);
   updateFeedback(feedback, worldRow, worldCol, feedbackRow, feedbackCol);
+  updateOutlines(outlines, worldRow, worldCol);
   updateItems(items, worldRow, worldCol);
   updatePlayer(player, worldRow, worldCol, playerRow, playerCol);
   freeChunks();
@@ -143,3 +148,5 @@ const findCurrentChunk = (top: number, left: number): boolean => {
   }
   return false;
 };
+
+export const getCurrentChunks = (): ArrayList<ChunkKey> => currentChunks;

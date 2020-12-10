@@ -1,7 +1,7 @@
 import { Vec2 } from '@spissvinkel/maths';
 import * as vec2 from '@spissvinkel/maths/vec2';
 
-import * as DebugMgr from './debug-mgr';
+import * as DebugMgr from './debug/debug-mgr';
 import * as InputMgr from './input-mgr';
 import * as RenderMgr from './render-mgr';
 import * as SceneMgr from './scene/scene-mgr';
@@ -34,8 +34,8 @@ const doNextFrame = (timeMillis: number): void => {
   TimeMgr.updateTime(timeMillis);
   InputMgr.update();
   SceneMgr.update();
-  RenderMgr.render(viewport.context);
   DebugMgr.update();
+  RenderMgr.render(viewport.context);
   if (!runState.paused) window.requestAnimationFrame(doNextFrame);
 };
 

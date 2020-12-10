@@ -1,9 +1,9 @@
-import { isPaused, resize } from './engine';
-import { addListener, Input } from './input-mgr';
-import { worldCol, worldRow } from './scene/scene-mgr';
-import { getLastSysTime, ONE_SECOND } from './time-mgr';
-import { hideAll, showAll } from './utils';
-import { getChunkPoolSize, getNumChunks } from './world-mgr';
+import { isPaused, resize } from '../engine';
+import { addListener, Input } from '../input-mgr';
+import { getScene, worldCol, worldRow } from '../scene/scene-mgr';
+import { getLastSysTime, ONE_SECOND } from '../time-mgr';
+import { hideAll, showAll } from '../utils';
+import { getChunkPoolSize, getNumChunks } from '../world-mgr';
 
 type Div = HTMLElement | null;
 
@@ -53,6 +53,7 @@ export const init = (): void => {
   paused.div = document.getElementById('paused');
   addListener(Input.DEBUG, cycleDebug);
   updateHtml();
+  getScene().outlines.enabled = (debugState !== DebugState.DEBUG_OFF);
 };
 
 const updateHtml = (): void => {
@@ -65,4 +66,5 @@ const updateHtml = (): void => {
 const cycleDebug = (): void => {
   debugState = (debugState + 1) % DEBUG_STATES.length;
   updateHtml();
+  getScene().outlines.enabled = (debugState !== DebugState.DEBUG_OFF);
 };

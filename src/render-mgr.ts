@@ -19,6 +19,8 @@ export const render = (context: CanvasRenderingContext2D): void => {
   context.transform(vp.r0c0, vp.r1c0, vp.r0c1, vp.r1c1, vp.r0c2, vp.r1c2);
   for (let i = 0; i < entities.length; i++) {
     const { enabled, drawables, m } = entities[i];
+    // eslint-disable-next-line no-debugger
+    // debugger;
     if (!enabled || drawables.length === 0) continue;
     context.save();
     renderDrawables(context, drawables, m);
