@@ -265,15 +265,15 @@ const generateBridges = (
     if (left.top < mTop && top.left - mLeft === 1) top.left--;
   }
 
-  if (getDebugState() !== DebugState.DEBUG_OFF) {
+  if (getDebugState() !== DebugState.DEBUG_OFF && chunk.bridgeRects !== undefined) {
     if (top !== undefined)
-      chunk.bridgeRects?.push({ top: top.top, left: top.left, btm: top.btm, right: top.right });
+      chunk.bridgeRects.push({ top: top.top, left: top.left, btm: top.btm, right: top.right });
     if (left !== undefined)
-      chunk.bridgeRects?.push({ top: left.top, left: left.left, btm: left.btm, right: left.right });
+      chunk.bridgeRects.push({ top: left.top, left: left.left, btm: left.btm, right: left.right });
     if (btm !== undefined)
-      chunk.bridgeRects?.push({ top: btm.top, left: btm.left, btm: btm.btm, right: btm.right });
+      chunk.bridgeRects.push({ top: btm.top, left: btm.left, btm: btm.btm, right: btm.right });
     if (right !== undefined)
-      chunk.bridgeRects?.push({ top: right.top, left: right.left, btm: right.btm, right: right.right });
+      chunk.bridgeRects.push({ top: right.top, left: right.left, btm: right.btm, right: right.right });
   }
 
   return bridges;
@@ -354,8 +354,8 @@ const generateCorners = (
     rect.btm   = mTop  + Math.floor(random(state) * (bLeft !== undefined ? bLeft.top - mTop  - 2 : minMHH));
     rect.right = mLeft + Math.floor(random(state) * (bTop  !== undefined ? bTop.left - mLeft - 2 : minMHW));
 
-    if (getDebugState() !== DebugState.DEBUG_OFF)
-      chunk.cornerRects?.push({ top: rect.top, left: rect.left, btm: rect.btm, right: rect.right });
+    if (getDebugState() !== DebugState.DEBUG_OFF && chunk.cornerRects !== undefined)
+      chunk.cornerRects.push({ top: rect.top, left: rect.left, btm: rect.btm, right: rect.right });
   }
 
   if (topRight) {
@@ -367,8 +367,8 @@ const generateCorners = (
     rect.btm  = mTop   + Math.floor(random(state) * (bRight !== undefined ? bRight.top - mTop - 2   : minMHH));
     rect.left = mRight - Math.floor(random(state) * (bTop   !== undefined ? mRight - bTop.right - 2 : minMHW));
 
-    if (getDebugState() !== DebugState.DEBUG_OFF)
-      chunk.cornerRects?.push({ top: rect.top, left: rect.left, btm: rect.btm, right: rect.right });
+    if (getDebugState() !== DebugState.DEBUG_OFF && chunk.cornerRects !== undefined)
+      chunk.cornerRects.push({ top: rect.top, left: rect.left, btm: rect.btm, right: rect.right });
   }
 
   if (btmLeft) {
@@ -380,8 +380,8 @@ const generateCorners = (
     rect.top   = mBtm  - Math.floor(random(state) * (bLeft !== undefined ? mBtm - bLeft.btm - 2  : minMHH));
     rect.right = mLeft + Math.floor(random(state) * (bBtm  !== undefined ? bBtm.left - mLeft - 2 : minMHW));
 
-    if (getDebugState() !== DebugState.DEBUG_OFF)
-      chunk.cornerRects?.push({ top: rect.top, left: rect.left, btm: rect.btm, right: rect.right });
+    if (getDebugState() !== DebugState.DEBUG_OFF && chunk.cornerRects !== undefined)
+      chunk.cornerRects.push({ top: rect.top, left: rect.left, btm: rect.btm, right: rect.right });
   }
 
   if (btmRight) {
@@ -393,8 +393,8 @@ const generateCorners = (
     rect.top  = mBtm   - Math.floor(random(state) * (bRight !== undefined ? mBtm - bRight.btm - 2   : minMHH));
     rect.left = mRight - Math.floor(random(state) * (bBtm   !== undefined ? mRight - bBtm.right - 2 : minMHW));
 
-    if (getDebugState() !== DebugState.DEBUG_OFF)
-      chunk.cornerRects?.push({ top: rect.top, left: rect.left, btm: rect.btm, right: rect.right });
+    if (getDebugState() !== DebugState.DEBUG_OFF && chunk.cornerRects !== undefined)
+      chunk.cornerRects.push({ top: rect.top, left: rect.left, btm: rect.btm, right: rect.right });
   }
 
   if (topMiddle) {
@@ -405,8 +405,8 @@ const generateCorners = (
     rect.right = mRight - 2 - Math.floor(random(state) * (minMHW - 1));
     rect.btm = mTop > 0 ? mTop - 1 : 0;
 
-    if (getDebugState() !== DebugState.DEBUG_OFF)
-      chunk.cornerRects?.push({ top: rect.top, left: rect.left, btm: rect.btm, right: rect.right });
+    if (getDebugState() !== DebugState.DEBUG_OFF && chunk.cornerRects !== undefined)
+      chunk.cornerRects.push({ top: rect.top, left: rect.left, btm: rect.btm, right: rect.right });
   }
 
   if (btmMiddle) {
@@ -417,8 +417,8 @@ const generateCorners = (
     rect.right = mRight - 2 - Math.floor(random(state) * (minMHW - 1));
     rect.top = mBtm < MAX_BTM ? mBtm + 1 : MAX_BTM;
 
-    if (getDebugState() !== DebugState.DEBUG_OFF)
-      chunk.cornerRects?.push({ top: rect.top, left: rect.left, btm: rect.btm, right: rect.right });
+    if (getDebugState() !== DebugState.DEBUG_OFF && chunk.cornerRects !== undefined)
+      chunk.cornerRects.push({ top: rect.top, left: rect.left, btm: rect.btm, right: rect.right });
   }
 
   if (leftMiddle) {
@@ -429,8 +429,8 @@ const generateCorners = (
     rect.btm = mBtm - 2 - Math.floor(random(state) * (minMHH - 1));
     rect.right = mLeft > 0 ? mLeft - 1 : 0;
 
-    if (getDebugState() !== DebugState.DEBUG_OFF)
-      chunk.cornerRects?.push({ top: rect.top, left: rect.left, btm: rect.btm, right: rect.right });
+    if (getDebugState() !== DebugState.DEBUG_OFF && chunk.cornerRects !== undefined)
+      chunk.cornerRects.push({ top: rect.top, left: rect.left, btm: rect.btm, right: rect.right });
   }
 
   if (rightMiddle) {
@@ -441,8 +441,8 @@ const generateCorners = (
     rect.btm = mBtm - 2 - Math.floor(random(state) * (minMHH - 1));
     rect.left = mRight < MAX_RIGHT ? mRight + 1 : MAX_RIGHT;
 
-    if (getDebugState() !== DebugState.DEBUG_OFF)
-      chunk.cornerRects?.push({ top: rect.top, left: rect.left, btm: rect.btm, right: rect.right });
+    if (getDebugState() !== DebugState.DEBUG_OFF && chunk.cornerRects !== undefined)
+      chunk.cornerRects.push({ top: rect.top, left: rect.left, btm: rect.btm, right: rect.right });
   }
 };
 

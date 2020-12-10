@@ -9,10 +9,10 @@ import { CHUNK_COLS, CHUNK_ROWS, getChunk, HALF_CHUNK_COLS, HALF_CHUNK_ROWS } fr
 const Y_OFFSET   = 0.5 * PX_SCALE;
 const LINE_WIDTH = 7.0 * PX_SCALE;
 
-const chunkColour  = '#ffff0080';
-const mainColour   = '#0044ff80';
-const bridgeColour = '#dd00ff80';
-const cornerColour = '#ff000080';
+const CHUNK_COLOUR  = '#ffff0080';
+const MAIN_COLOUR   = '#0044ff80';
+const BRIDGE_COLOUR = '#dd00ff80';
+const CORNER_COLOUR = '#ff000080';
 
 export const mkOutlines = (): BaseEntity => {
   const outlines = mkBaseEntity(false);
@@ -36,7 +36,7 @@ export const updateOutlines = (outlines: BaseEntity, worldRow: number, worldCol:
   // Chunk outline
   if (drawables.length === di) d = addOutlinesDrawable(outlines);
   else d = drawables[di];
-  updatePathInfo(d, 0, 0, CHUNK_ROWS - 1, CHUNK_COLS - 1, chunkColour);
+  updatePathInfo(d, 0, 0, CHUNK_ROWS - 1, CHUNK_COLS - 1, CHUNK_COLOUR);
   const { offset } = d;
   addCellOffset(vec2.setZero(offset), HALF_CHUNK_ROWS + top - worldRow, HALF_CHUNK_COLS + left - worldCol);
   di++;
@@ -46,7 +46,7 @@ export const updateOutlines = (outlines: BaseEntity, worldRow: number, worldCol:
     const { top: mTop, left: mLeft, btm: mBtm, right: mRight } = mainRect;
     if (drawables.length === di) d = addOutlinesDrawable(outlines);
     else d = drawables[di];
-    updatePathInfo(d, mTop, mLeft, mBtm, mRight, mainColour);
+    updatePathInfo(d, mTop, mLeft, mBtm, mRight, MAIN_COLOUR);
     const { offset } = d;
     addCellOffset(vec2.setZero(offset), HALF_CHUNK_ROWS + top - worldRow, HALF_CHUNK_COLS + left - worldCol);
     di++;
@@ -58,7 +58,7 @@ export const updateOutlines = (outlines: BaseEntity, worldRow: number, worldCol:
       const { top: mTop, left: mLeft, btm: mBtm, right: mRight } = bridgeRects[i];
       if (drawables.length === di) d = addOutlinesDrawable(outlines);
       else d = drawables[di];
-      updatePathInfo(d, mTop, mLeft, mBtm, mRight, bridgeColour);
+      updatePathInfo(d, mTop, mLeft, mBtm, mRight, BRIDGE_COLOUR);
       const { offset } = d;
       addCellOffset(vec2.setZero(offset), HALF_CHUNK_ROWS + top - worldRow, HALF_CHUNK_COLS + left - worldCol);
       di++;
@@ -71,7 +71,7 @@ export const updateOutlines = (outlines: BaseEntity, worldRow: number, worldCol:
       const { top: mTop, left: mLeft, btm: mBtm, right: mRight } = cornerRects[i];
       if (drawables.length === di) d = addOutlinesDrawable(outlines);
       else d = drawables[di];
-      updatePathInfo(d, mTop, mLeft, mBtm, mRight, cornerColour);
+      updatePathInfo(d, mTop, mLeft, mBtm, mRight, CORNER_COLOUR);
       const { offset } = d;
       addCellOffset(vec2.setZero(offset), HALF_CHUNK_ROWS + top - worldRow, HALF_CHUNK_COLS + left - worldCol);
       di++;

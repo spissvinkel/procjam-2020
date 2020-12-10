@@ -1,20 +1,22 @@
 import { Camera, mkCamera, resizeCamera } from './camera';
+import { DebugState, getDebugState } from '../debug/debug-mgr';
 import { Viewport } from '../engine';
 import { BaseEntity, cleanEntity, updateEntity } from './entity';
 import { Feedback, mkFeedback, initFeedback, updateFeedback } from './feedback';
-import { Items, mkItems, initItems, updateItems } from './items';
-import { initPlayer, mkPlayer, Player, updatePlayer } from './player';
-import { initTerrain, mkTerrain, Terrain, updateTerrain } from './terrain';
-import { getDeltaTimeSeconds } from '../time-mgr';
-import { addToList, ArrayList, clearList, mkArrayList } from '../utils';
-import { Chunk, CHUNK_COLS, CHUNK_ROWS, freeChunk, getChunk, ItemType, WORLD_COLS, WORLD_ROWS } from '../world-mgr';
+import { Grid } from './grid';
+import { adjustWorldCol, adjustWorldRow, freeWorldChunks, getWorldCell } from './grid-mgr';
+import { mkItems, initItems, updateItems } from './items';
 import { initOutlines, mkOutlines, updateOutlines } from '../debug/outlines';
+import { initPlayer, mkPlayer, Player, updatePlayer } from './player';
+import { initTerrain, mkTerrain, updateTerrain } from './terrain';
+import { getDeltaTimeSeconds } from '../time-mgr';
+import { CHUNK_COLS, CHUNK_ROWS, ItemType } from '../world-mgr';
 
 export interface Scene {
   entities: BaseEntity[];
-  terrain : Terrain;
+  terrain : Grid;
   feedback: Feedback;
-  items   : Items;
+  items   : Grid;
   player  : Player;
   outlines: BaseEntity;
   camera  : Camera;
@@ -31,40 +33,6 @@ const scene: Scene = {
 };
 
 export const getScene = (): Scene => scene;
-
-export interface ChunkKey { top: number, left: number }
-const mkChunkKey = (): ChunkKey => ({ top: 0, left: 0 });
-let previousChunks = mkArrayList(mkChunkKey);
-let currentChunks = mkArrayList(mkChunkKey);
-
-// TODO: organise/refactor this
-export let worldRow = Math.floor(CHUNK_ROWS / 2), worldCol = Math.floor(CHUNK_COLS / 2);
-export let feedbackRow = worldRow, feedbackCol = worldCol;
-export let playerRow = worldRow, playerCol = worldCol;
-
-/**
- *
- * @param row terrain relative row (0 is middle of terrain)
- * @param col terrain relative column (0 is middle of terrain)
- */
-export const gridClick = (row: number, col: number): void => {
-  const { terrain, feedback, items, player, outlines } = scene;
-  let wRow = worldRow + row, wCol = worldCol + col;
-  if (wRow < 0) wRow += WORLD_ROWS; else if (wRow >= WORLD_ROWS) wRow -= WORLD_ROWS;
-  if (wCol < 0) wCol += WORLD_COLS; else if (wCol >= WORLD_COLS) wCol -= WORLD_COLS;
-  const top = Math.floor(wRow / CHUNK_ROWS) * CHUNK_ROWS, left = Math.floor(wCol / CHUNK_COLS) * CHUNK_COLS;
-  const chRow = wRow - top, chCol = wCol - left;
-  const { ground, item } = getChunk(top, left).cells[chRow][chCol];
-  if (!ground || item !== ItemType.EMPTY) return;
-  worldRow = wRow;
-  worldCol = wCol;
-  updateTerrain(terrain, worldRow, worldCol);
-  updateFeedback(feedback, worldRow, worldCol, feedbackRow = worldRow, feedbackCol = worldCol);
-  updateOutlines(outlines, worldRow, worldCol);
-  updateItems(items, worldRow, worldCol);
-  updatePlayer(player, worldRow, worldCol, playerRow = worldRow, playerCol = worldCol);
-  freeChunks();
-};
 
 export const update = (): void => {
   const { entities } = scene;
@@ -104,49 +72,42 @@ const initEntities = (): void => {
   addEntity(initOutlines(outlines));
   addEntity(initItems(items));
   addEntity(initPlayer(player));
+  // TODO: refactor this
   updateTerrain(terrain, worldRow, worldCol);
   updateFeedback(feedback, worldRow, worldCol, feedbackRow, feedbackCol);
   updateOutlines(outlines, worldRow, worldCol);
   updateItems(items, worldRow, worldCol);
   updatePlayer(player, worldRow, worldCol, playerRow, playerCol);
-  freeChunks();
+  freeWorldChunks();
 };
 
 const initCamera = (): void => addEntity(scene.camera);
 
 export const addEntity = (entity: BaseEntity): void => { scene.entities.push(entity); };
 
-export const getWorldChunk = (top: number, left: number): Chunk => {
-  addChunkKey(top, left);
-  return getChunk(top, left);
-};
+// TODO: organise/refactor this
+// eslint-disable-next-line prefer-const
+export let worldRow = Math.floor(CHUNK_ROWS / 2), worldCol = Math.floor(CHUNK_COLS / 2);
+// eslint-disable-next-line prefer-const
+export let feedbackRow = worldRow, feedbackCol = worldCol;
+// eslint-disable-next-line prefer-const
+export let playerRow = worldRow, playerCol = worldCol;
 
-const addChunkKey = (top: number, left: number): void => {
-  if (findCurrentChunk(top, left)) return;
-  const key = addToList(currentChunks);
-  key.top = top;
-  key.left = left;
+/**
+ *
+ * @param row terrain relative row (0 is middle of terrain)
+ * @param col terrain relative column (0 is middle of terrain)
+ */
+export const gridClick = (gridRow: number, gridCol: number): void => {
+  const { terrain, feedback, items, player, outlines } = getScene();
+  const { ground, item } = getWorldCell(worldRow, worldCol, gridRow, gridCol);
+  if (!ground || item !== ItemType.EMPTY) return;
+  worldRow = adjustWorldRow(worldRow, gridRow);
+  worldCol = adjustWorldCol(worldCol, gridCol);
+  updateTerrain(terrain, worldRow, worldCol);
+  updateFeedback(feedback, worldRow, worldCol, feedbackRow = worldRow, feedbackCol = worldCol);
+  if (getDebugState() !== DebugState.DEBUG_OFF) updateOutlines(outlines, worldRow, worldCol);
+  updateItems(items, worldRow, worldCol);
+  updatePlayer(player, worldRow, worldCol, playerRow = worldRow, playerCol = worldCol);
+  freeWorldChunks();
 };
-
-const freeChunks = (): void => {
-  const { numElements: numPrevElems, elements: prevElems } = previousChunks;
-  for (let i = 0; i < numPrevElems; i++) {
-    const { top, left } = prevElems[i];
-    if (!findCurrentChunk(top, left)) freeChunk(getChunk(top, left));
-  }
-  clearList(previousChunks);
-  const tmp = previousChunks;
-  previousChunks = currentChunks;
-  currentChunks = tmp;
-};
-
-const findCurrentChunk = (top: number, left: number): boolean => {
-  const { numElements, elements } = currentChunks;
-  for (let i = 0; i < numElements; i++) {
-    const { top: t, left: l } = elements[i];
-    if (t === top && l === left) return true;
-  }
-  return false;
-};
-
-export const getCurrentChunks = (): ArrayList<ChunkKey> => currentChunks;

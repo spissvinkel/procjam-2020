@@ -1,61 +1,23 @@
-import { Vec2 } from '@spissvinkel/maths';
-import * as vec2 from '@spissvinkel/maths/vec2';
+import { mkTxDrawable, TX_SPECS, TxSpec, updateTxDrawable } from './drawable';
+import { addDrawable } from './entity';
+import { forEachGridCell, Grid, mkGrid, setGridCellOffset } from './grid';
+import { getWorldCell } from './grid-mgr';
 
-import { addCellOffset, Drawable, mkTxDrawable, TX_SPECS, TxSpec, updateTxDrawable } from './drawable';
-import { addDrawable, Entity, mkBaseEntity } from './entity';
-import { getWorldChunk } from './scene-mgr';
-import { Cell, CHUNK_COLS, CHUNK_ROWS, WORLD_COLS, WORLD_ROWS } from '../world-mgr';
-
-export interface Terrain extends Entity<Terrain> {
-  worldRow: number; // centre
-  worldCol: number; // centre
-  offset  : Vec2;
-  extent  : { min: Vec2, max: Vec2 };
-}
-
-export const TERRAIN_ROWS = 23;
-export const TERRAIN_COLS = 33;
-
-const HALF_ROWS = Math.floor(TERRAIN_ROWS / 2);
-const HALF_COLS = Math.floor(TERRAIN_COLS / 2);
-const TOP_LEFT_ROW =  HALF_COLS - HALF_ROWS;
-const TOP_LEFT_COL = -HALF_COLS - HALF_ROWS;
-
-export const mkTerrain = (): Terrain => {
-  const terrain = mkBaseEntity(true) as Terrain;
-  terrain.worldRow = 0;
-  terrain.worldCol = 0;
-  const offset = terrain.offset = vec2.zero();
-  const cellOffsetNW = addCellOffset(vec2.ofV(offset), -HALF_ROWS, -HALF_COLS);
-  const cellOffsetNE = addCellOffset(vec2.ofV(offset), -HALF_ROWS,  HALF_COLS);
-  const cellOffsetSW = addCellOffset(vec2.ofV(offset),  HALF_ROWS, -HALF_COLS);
-  const cellOffsetSE = addCellOffset(vec2.ofV(offset),  HALF_ROWS,  HALF_COLS);
-  terrain.extent = {
-    min: vec2.of(cellOffsetSW.x, cellOffsetSE.y),
-    max: vec2.of(cellOffsetNE.x, cellOffsetNW.y)
-  };
+export const mkTerrain = (): Grid => {
+  const terrain = mkGrid();
   return terrain;
 };
 
-export const initTerrain = (terrain: Terrain): Terrain => {
+export const initTerrain = (terrain: Grid): Grid => {
   const { BLOCK } = TX_SPECS;
   const { txId } = BLOCK;
-  forEachCell((r, c) => setCellOffset(addDrawable(terrain, mkTxDrawable(txId, false)), terrain, BLOCK, r, c));
+  forEachGridCell((r, c) =>
+    setGridCellOffset(addDrawable(terrain, mkTxDrawable(txId, false)), terrain, BLOCK, r, c)
+  );
   return terrain;
 };
 
-const getCell = (worldRow: number, worldCol: number, row: number, col: number): Cell => {
-  let wRow = row + worldRow, wCol = col + worldCol;
-  if (wRow < 0) wRow += WORLD_ROWS; else if (wRow >= WORLD_ROWS) wRow -= WORLD_ROWS;
-  if (wCol < 0) wCol += WORLD_COLS; else if (wCol >= WORLD_COLS) wCol -= WORLD_COLS;
-  const top = Math.floor(wRow / CHUNK_ROWS) * CHUNK_ROWS, left = Math.floor(wCol / CHUNK_COLS) * CHUNK_COLS;
-  const chunk = getWorldChunk(top, left);
-  const { cells } = chunk;
-  const chRow = wRow - top, chCol = wCol - left;
-  return cells[chRow][chCol];
-};
-
-export const updateTerrain = (terrain: Terrain, wr: number, wc: number): Terrain => {
+export const updateTerrain = (terrain: Grid, wr: number, wc: number): Grid => {
   const {
     BLOCK, BLOCK_DARK,
     TOP_SIDE_N, TOP_SIDE_E, TOP_SIDE_S, TOP_SIDE_W,
@@ -66,11 +28,11 @@ export const updateTerrain = (terrain: Terrain, wr: number, wc: number): Terrain
   terrain.worldRow = wr;
   terrain.worldCol = wc;
   let di = -1;
-  forEachCell((r, c) => {
+  forEachGridCell((gr, gc) => {
     const d = drawables[++di];
     d.enabled = false;
     let txSpec: TxSpec | undefined = undefined;
-    const cell = getCell(wr, wc, r, c);
+    const cell = getWorldCell(wr, wc, gr, gc);
     if (cell.ground) txSpec = cell.even ? BLOCK_DARK : BLOCK;
     else {
       // TODO: use pattern of 8 cells -> 256 LUT
@@ -82,92 +44,63 @@ export const updateTerrain = (terrain: Terrain, wr: number, wc: number): Terrain
       let gRp1Cm1: boolean | undefined = undefined;
       let gRp1C  : boolean | undefined = undefined;
       let gRp1Cp1: boolean | undefined = undefined;
-      if ((gRp1Cp1 ?? (gRp1Cp1 = getCell(wr, wc, r + 1, c + 1).ground))
-          && !(gRp1C ?? (gRp1C = getCell(wr, wc, r + 1, c).ground))
-          && !(gRCp1 ?? (gRCp1 = getCell(wr, wc, r, c + 1).ground)))
+      if ((gRp1Cp1 ?? (gRp1Cp1 = getWorldCell(wr, wc, gr + 1, gc + 1).ground))
+          && !(gRp1C ?? (gRp1C = getWorldCell(wr, wc, gr + 1, gc).ground))
+          && !(gRCp1 ?? (gRCp1 = getWorldCell(wr, wc, gr, gc + 1).ground)))
         txSpec = TOP_OUT_NW;
-      if ((gRp1C ?? (gRp1C = getCell(wr, wc, r + 1, c).ground))
-          && (gRCp1 ?? (gRCp1 = getCell(wr, wc, r, c + 1).ground)))
+      if ((gRp1C ?? (gRp1C = getWorldCell(wr, wc, gr + 1, gc).ground))
+          && (gRCp1 ?? (gRCp1 = getWorldCell(wr, wc, gr, gc + 1).ground)))
         txSpec = TOP_IN_NW;
-      if ((gRp1Cm1 ?? (gRp1Cm1 = getCell(wr, wc, r + 1, c - 1).ground))
-          && !(gRp1C ?? (gRp1C = getCell(wr, wc, r + 1, c).ground))
-          && !(gRCm1 ?? (gRCm1 = getCell(wr, wc, r, c - 1).ground)))
+      if ((gRp1Cm1 ?? (gRp1Cm1 = getWorldCell(wr, wc, gr + 1, gc - 1).ground))
+          && !(gRp1C ?? (gRp1C = getWorldCell(wr, wc, gr + 1, gc).ground))
+          && !(gRCm1 ?? (gRCm1 = getWorldCell(wr, wc, gr, gc - 1).ground)))
         txSpec = TOP_OUT_NE;
-      if ((gRp1C ?? (gRp1C = getCell(wr, wc, r + 1, c).ground))
-          && (gRCm1 ?? (gRCm1 = getCell(wr, wc, r, c - 1).ground)))
+      if ((gRp1C ?? (gRp1C = getWorldCell(wr, wc, gr + 1, gc).ground))
+          && (gRCm1 ?? (gRCm1 = getWorldCell(wr, wc, gr, gc - 1).ground)))
         txSpec = TOP_IN_NE;
-      if ((gRm1Cm1 ?? (gRm1Cm1 = getCell(wr, wc, r - 1, c - 1).ground))
-          && !(gRm1C ?? (gRm1C = getCell(wr, wc, r - 1, c).ground))
-          && !(gRCm1 ?? (gRCm1 = getCell(wr, wc, r, c - 1).ground)))
+      if ((gRm1Cm1 ?? (gRm1Cm1 = getWorldCell(wr, wc, gr - 1, gc - 1).ground))
+          && !(gRm1C ?? (gRm1C = getWorldCell(wr, wc, gr - 1, gc).ground))
+          && !(gRCm1 ?? (gRCm1 = getWorldCell(wr, wc, gr, gc - 1).ground)))
         txSpec = TOP_OUT_SE;
 
       if (
-        ((gRm1C ?? (gRm1C = getCell(wr, wc, r - 1, c).ground))
-          && ((gRCm1 ?? (gRCm1 = getCell(wr, wc, r, c - 1).ground))
-            || (gRp1Cm1 ?? (gRp1Cm1 = getCell(wr, wc, r + 1, c - 1).ground))))
-        || ((gRCm1 ?? (gRCm1 = getCell(wr, wc, r, c - 1).ground))
-          && ((gRm1C ?? (gRm1C = getCell(wr, wc, r - 1, c).ground))
-            || (gRm1Cp1 ?? (gRm1Cp1 = getCell(wr, wc, r - 1, c + 1).ground))))
+        ((gRm1C ?? (gRm1C = getWorldCell(wr, wc, gr - 1, gc).ground))
+          && ((gRCm1 ?? (gRCm1 = getWorldCell(wr, wc, gr, gc - 1).ground))
+            || (gRp1Cm1 ?? (gRp1Cm1 = getWorldCell(wr, wc, gr + 1, gc - 1).ground))))
+        || ((gRCm1 ?? (gRCm1 = getWorldCell(wr, wc, gr, gc - 1).ground))
+          && ((gRm1C ?? (gRm1C = getWorldCell(wr, wc, gr - 1, gc).ground))
+            || (gRm1Cp1 ?? (gRm1Cp1 = getWorldCell(wr, wc, gr - 1, gc + 1).ground))))
       ) txSpec = TOP_IN_SE;
 
-      if ((gRm1Cp1 ?? (gRm1Cp1 = getCell(wr, wc, r - 1, c + 1).ground))
-          && !(gRm1C ?? (gRm1C = getCell(wr, wc, r - 1, c).ground))
-          && !(gRCp1 ?? (gRCp1 = getCell(wr, wc, r, c + 1).ground)))
+      if ((gRm1Cp1 ?? (gRm1Cp1 = getWorldCell(wr, wc, gr - 1, gc + 1).ground))
+          && !(gRm1C ?? (gRm1C = getWorldCell(wr, wc, gr - 1, gc).ground))
+          && !(gRCp1 ?? (gRCp1 = getWorldCell(wr, wc, gr, gc + 1).ground)))
         txSpec = TOP_OUT_SW;
-      if ((gRm1C ?? (gRm1C = getCell(wr, wc, r - 1, c).ground))
-          && (gRCp1 ?? (gRCp1 = getCell(wr, wc, r, c + 1).ground)))
+      if ((gRm1C ?? (gRm1C = getWorldCell(wr, wc, gr - 1, gc).ground))
+          && (gRCp1 ?? (gRCp1 = getWorldCell(wr, wc, gr, gc + 1).ground)))
         txSpec = TOP_IN_SW;
-      if ((gRp1C ?? (gRp1C = getCell(wr, wc, r + 1, c).ground))
-          && !(gRCm1 ?? (gRCm1 = getCell(wr, wc, r, c - 1).ground))
-          && !(gRCp1 ?? (gRCp1 = getCell(wr, wc, r, c + 1).ground)))
+      if ((gRp1C ?? (gRp1C = getWorldCell(wr, wc, gr + 1, gc).ground))
+          && !(gRCm1 ?? (gRCm1 = getWorldCell(wr, wc, gr, gc - 1).ground))
+          && !(gRCp1 ?? (gRCp1 = getWorldCell(wr, wc, gr, gc + 1).ground)))
         txSpec = TOP_SIDE_N;
-      if ((gRCm1 ?? (gRCm1 = getCell(wr, wc, r, c - 1).ground))
-          && !(gRm1C ?? (gRm1C = getCell(wr, wc, r - 1, c).ground))
-          && !(gRp1C ?? (gRp1C = getCell(wr, wc, r + 1, c).ground)))
+      if ((gRCm1 ?? (gRCm1 = getWorldCell(wr, wc, gr, gc - 1).ground))
+          && !(gRm1C ?? (gRm1C = getWorldCell(wr, wc, gr - 1, gc).ground))
+          && !(gRp1C ?? (gRp1C = getWorldCell(wr, wc, gr + 1, gc).ground)))
         txSpec = TOP_SIDE_E;
-      if ((gRm1C ?? (gRm1C = getCell(wr, wc, r - 1, c).ground))
-          && !(gRCm1 ?? (gRCm1 = getCell(wr, wc, r, c - 1).ground))
-          && !(gRCp1 ?? (gRCp1 = getCell(wr, wc, r, c + 1).ground)))
+      if ((gRm1C ?? (gRm1C = getWorldCell(wr, wc, gr - 1, gc).ground))
+          && !(gRCm1 ?? (gRCm1 = getWorldCell(wr, wc, gr, gc - 1).ground))
+          && !(gRCp1 ?? (gRCp1 = getWorldCell(wr, wc, gr, gc + 1).ground)))
         txSpec = TOP_SIDE_S;
-      if ((gRCp1 ?? (gRCp1 = getCell(wr, wc, r, c + 1).ground))
-          && !(gRm1C ?? (gRm1C = getCell(wr, wc, r - 1, c).ground))
-          && !(gRp1C ?? (gRp1C = getCell(wr, wc, r + 1, c).ground)))
+      if ((gRCp1 ?? (gRCp1 = getWorldCell(wr, wc, gr, gc + 1).ground))
+          && !(gRm1C ?? (gRm1C = getWorldCell(wr, wc, gr - 1, gc).ground))
+          && !(gRp1C ?? (gRp1C = getWorldCell(wr, wc, gr + 1, gc).ground)))
         txSpec = TOP_SIDE_W;
     }
     if (txSpec !== undefined && d.txInfo !== undefined) {
       const { txId } = txSpec;
       if (d.txInfo.textureId === txId) d.enabled = true;
-      else setCellOffset(updateTxDrawable(d, txId, true), terrain, txSpec, r, c);
+      else setGridCellOffset(updateTxDrawable(d, txId, true), terrain, txSpec, gr, gc);
     }
   });
   return terrain;
-};
-
-const setCellOffset = (drawable: Drawable, terrain: Terrain, txSpec: TxSpec, row: number, column: number): void => {
-  const { offset: terrainOffset  } = terrain;
-  const { offset: txSpecOffset   } = txSpec;
-  const { offset: drawableOffset } = drawable;
-  addCellOffset(vec2.addV(vec2.addV(drawableOffset, txSpecOffset), terrainOffset), row, column);
-};
-
-const forEachCell = (f: (row: number, col: number) => void): void => {
-  let r0 = TOP_LEFT_ROW, c0 = TOP_LEFT_COL, r, c;
-  for (let y = 0; y < TERRAIN_ROWS - 1; y++) {
-    for (let k = 0; k < 2; k++) {
-      r = r0;
-      c = c0 + k;
-      for (let x = k; x < TERRAIN_COLS; x++) {
-        f(r, c);
-        r--;
-        c++;
-      }
-    }
-    r0++;
-    c0++;
-  }
-  for (let x = 0; x < TERRAIN_COLS; x++) {
-    f(r0, c0);
-    r0--;
-    c0++;
-  }
 };
