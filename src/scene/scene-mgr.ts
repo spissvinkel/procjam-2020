@@ -5,7 +5,7 @@ import { BaseEntity, cleanEntity, updateEntity } from './entity';
 import { Feedback, mkFeedback, initFeedback, updateFeedback } from './feedback';
 import { Grid, initGrid, mkGrid, updateGridCells } from './grid';
 import { adjustWorldCol, adjustWorldRow, freeWorldChunks, getWorldCell } from '../grid-mgr';
-import { initOutlines, mkOutlines, updateOutlines } from '../debug/outlines';
+import { initOutlines, mkOutlines, Outlines, updateOutlines } from '../debug/outlines';
 import { initPlayer, mkPlayer, Player } from './player';
 import { getDeltaTimeSeconds } from '../time-mgr';
 import { CHUNK_COLS, CHUNK_ROWS, ItemType } from '../world-mgr';
@@ -15,7 +15,7 @@ export interface Scene {
   grid    : Grid;
   feedback: Feedback;
   player  : Player;
-  outlines: BaseEntity;
+  outlines: Outlines;
   camera  : Camera;
 }
 

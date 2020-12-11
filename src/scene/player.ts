@@ -18,8 +18,9 @@ export const Direction = {
   NW: TX_SPECS.CH_DIG_NW
 };
 
-const MAX_VELOCITY_X = 2.5;
-const MAX_VELOCITY_Y = MAX_VELOCITY_X * CELL_Z_OFFSET / CELL_X_OFFSET;
+const VELOCITY_Y_FACTOR = CELL_Z_OFFSET / CELL_X_OFFSET;
+const MAX_VELOCITY_X = 3.5;
+const MAX_VELOCITY_Y = MAX_VELOCITY_X; // * VELOCITY_Y_FACTOR;
 
 export interface Player extends Entity<Player> {
   gridRow: number; // position
@@ -66,8 +67,8 @@ const updateVelocity = (player: Player): void => {
   vec2.setZero(velocity);
   if (poll(Input.P1_LEFT)) velocity.x = -1.0;
   else if (poll(Input.P1_RIGHT)) velocity.x = 1.0;
-  if (poll(Input.P1_UP)) velocity.y = 1.0;
-  else if (poll(Input.P1_DOWN)) velocity.y = -1.0;
+  if (poll(Input.P1_UP)) velocity.y = VELOCITY_Y_FACTOR; // 1.0;
+  else if (poll(Input.P1_DOWN)) velocity.y = -VELOCITY_Y_FACTOR; // -1.0;
   vec2.norm(velocity);
   velocity.x *= MAX_VELOCITY_X;
   velocity.y *= MAX_VELOCITY_Y;

@@ -1,6 +1,6 @@
 import { isPaused, resize } from '../engine';
 import { addListener, Input } from '../input-mgr';
-import { getScene, worldCol, worldRow } from '../scene/scene-mgr';
+import { getScene } from '../scene/scene-mgr';
 import { getLastSysTime, ONE_SECOND } from '../time-mgr';
 import { hideAll, showAll } from '../utils';
 import { getChunkPoolSize, getNumChunks } from '../world-mgr';
@@ -35,6 +35,7 @@ export const update = (): void => {
   }
   fps.count++;
   if (getDebugState() !== DebugState.DEBUG_OFF) {
+    const { grid: { worldRow, worldCol }} = getScene();
     if (fps.div !== null) fps.div.textContent = `${fps.avg}`;
     if (chunks.chunksDiv !== null) chunks.chunksDiv.textContent = `${getNumChunks()}`;
     if (chunks.poolDiv !== null) chunks.poolDiv.textContent = `${getChunkPoolSize()}`;

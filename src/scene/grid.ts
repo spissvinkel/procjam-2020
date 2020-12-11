@@ -1,9 +1,14 @@
 import { Vec2 } from '@spissvinkel/maths';
 import * as vec2 from '@spissvinkel/maths/vec2';
 
+import { DebugState, getDebugState } from '../debug/debug-mgr';
 import { addCellOffset, Drawable, mkTxDrawable, TxSpec, TX_SPECS, updateTxDrawable } from './drawable';
 import { addDrawable, Entity, mkBaseEntity } from './entity';
-import { getWorldCell, GRID_COLS, GRID_ROWS, HALF_GRID_COLS, HALF_GRID_ROWS, TOP_LEFT_GRID_COL, TOP_LEFT_GRID_ROW } from '../grid-mgr';
+import { updateFeedback } from './feedback';
+import { adjustWorldCol, adjustWorldRow, freeWorldChunks, getWorldCell, GRID_COLS, GRID_ROWS, HALF_GRID_COLS, HALF_GRID_ROWS, TOP_LEFT_GRID_COL, TOP_LEFT_GRID_ROW } from '../grid-mgr';
+import { Input, poll } from '../input-mgr';
+import { mkMoveable } from './moveable';
+import { updateOutlines } from '../debug/outlines';
 import { getScene } from './scene-mgr';
 import { ItemType } from '../world-mgr';
 
@@ -35,41 +40,85 @@ export const mkGrid = (): Grid => {
 };
 
 export const initGrid = (grid: Grid): Grid => {
+  grid.moveable = mkMoveable(grid, vec2.zero(), 0.0);
   grid.updateVelocity = updateVelocity;
   grid.updatePosition = updatePosition;
   return grid;
 };
 
 const updateVelocity = (grid: Grid): void => {
-  //
+  const { moveable: gridMoveable } = grid;
+  const { player: { moveable: playerMoveable } } = getScene();
+  if (gridMoveable === undefined || playerMoveable === undefined) return;
+  const { velocity: gridVelocity } = gridMoveable;
+  const { velocity: playerVelocity } = playerMoveable;
+  vec2.setV(gridVelocity, playerVelocity);
+  vec2.inv(gridVelocity);
 };
 
 const updatePosition = (grid: Grid): void => {
-  const { drawables, worldRow, worldCol, playerDI } = grid;
+  const { position: gridPos, drawables, worldRow, worldCol, playerDI } = grid;
   const maxPdi = drawables.length - 1;
   let pdi = playerDI;
   if (pdi < 0) return;
-  const { player: { gridRow, gridCol, offset, facing } } = getScene();
-  if (!(gridRow === 0 && gridCol === 0)) {
-    // updateGridCells(grid, )
-  }
+  const { feedback, player, outlines } = getScene();
+  const { position: playerPos, gridRow: playerRow, gridCol: playerCol, offset: playerOffset, facing } = player;
+  const { position: outlinesPos } = outlines;
+  const debug = getDebugState() !== DebugState.DEBUG_OFF;
   const pd = drawables[pdi];
-  setGridCellOffset(updateTxDrawable(pd, facing, true), gridRow, gridCol, offset);
-  let di: number;
-  let d: Drawable;
-  while (pdi > 0 && compareOffsets(pd, (d = drawables[di = pdi - 1])) < 0) {
-    drawables[di] = pd;
-    drawables[pdi] = d;
-    pdi = di;
-  }
-  if (pdi === playerDI) {
-    while (pdi < maxPdi && (d = drawables[di = pdi + 1]).enabled && compareOffsets(pd, d) > 0) {
+  if (playerRow === 0 && playerCol === 0) {
+    // Update player drawable
+    setGridCellOffset(updateTxDrawable(pd, facing, true), 0, 0, playerOffset);
+    let di: number;
+    let d: Drawable;
+    while (pdi > 0 && compareOffsets(pd, (d = drawables[di = pdi - 1])) < 0) {
+      if (d.txInfo !== undefined && !d.txInfo.txSpec.isItem) break; // we have reached the terrain drawables
       drawables[di] = pd;
       drawables[pdi] = d;
       pdi = di;
     }
+    if (pdi === playerDI) { // no change - check other direction
+      while (pdi < maxPdi && compareOffsets(pd, (d = drawables[di = pdi + 1])) > 0) {
+        if (!d.enabled) break; // we have reached the unused drawables
+        drawables[di] = pd;
+        drawables[pdi] = d;
+        pdi = di;
+      }
+    }
+    grid.playerDI = pdi;
+  } else {
+    // Reset grid world pos
+    vec2.setV(playerPos, playerOffset);
+    player.gridRow = 0;
+    player.gridCol = 0;
+    vec2.setV(gridPos, playerOffset);
+    vec2.inv(gridPos);
+    const newWorldRow = adjustWorldRow(worldRow, playerRow);
+    const newWorldCol = adjustWorldCol(worldCol, playerCol);
+    updateFeedback(feedback, newWorldRow, newWorldCol, 0, 0);
+    updateGridCells(grid, newWorldRow, newWorldCol);
+    if (debug) {
+      vec2.setV(outlinesPos, gridPos);
+      updateOutlines(outlines, newWorldRow, newWorldCol);
+    }
+    freeWorldChunks();
   }
-  grid.playerDI = pdi;
+
+
+  if (poll(Input.P1_DEBUG)) {
+    const counts: { [ key: string ]: number } = {};
+    for (let i = 0; i < drawables.length; i++) {
+      const { txInfo } = drawables[i];
+      if (txInfo === undefined) continue;
+      const { txSpec: { txId } } = txInfo;
+      if (txId in counts) counts[txId]++;
+      else counts[txId] = 1;
+    }
+    console.log('***** tx drawables *****');
+    for (const key in counts) {
+      console.log(`${key}: ${counts[key]}`);
+    }
+  }
 };
 
 type CompRes = -1 | 0 | 1;

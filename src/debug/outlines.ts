@@ -2,11 +2,12 @@ import * as mat3 from '@spissvinkel/maths/mat3';
 import * as vec2 from '@spissvinkel/maths/vec2';
 
 import { addCellOffset, Drawable, grid2world, JoinStyle, mkPathDrawable, PX_SCALE } from '../scene/drawable';
-import { addDrawable, BaseEntity, mkBaseEntity } from '../scene/entity';
+import { addDrawable, Entity, mkBaseEntity } from '../scene/entity';
+import { mkMoveable } from '../scene/moveable';
+import { getScene } from '../scene/scene-mgr';
 import { setHexRGBA } from '../utils';
 import { CHUNK_COLS, CHUNK_ROWS, getChunk, HALF_CHUNK_COLS, HALF_CHUNK_ROWS } from '../world-mgr';
 
-const Y_OFFSET   = 0.5 * PX_SCALE;
 const LINE_WIDTH = 7.0 * PX_SCALE;
 
 const CHUNK_COLOUR  = '#ffff0080';
@@ -14,16 +15,29 @@ const MAIN_COLOUR   = '#0044ff80';
 const BRIDGE_COLOUR = '#dd00ff80';
 const CORNER_COLOUR = '#ff000080';
 
-export const mkOutlines = (): BaseEntity => {
-  const outlines = mkBaseEntity(false);
+export type Outlines = Entity<Outlines>;
+
+export const mkOutlines = (): Outlines => {
+  const outlines = mkBaseEntity(false) as Outlines;
   return outlines;
 };
 
-export const initOutlines = (outlines: BaseEntity): BaseEntity => {
+export const initOutlines = (outlines: Outlines): Outlines => {
+  outlines.moveable = mkMoveable(outlines, vec2.zero(), 0.0);
+  outlines.updateVelocity = updateVelocity;
   return outlines;
 };
 
-export const updateOutlines = (outlines: BaseEntity, worldRow: number, worldCol: number): BaseEntity => {
+const updateVelocity = (outlines: Outlines): void => {
+  const { moveable: outlinesMoveable } = outlines;
+  const { grid: { moveable: gridMoveable } } = getScene();
+  if (outlinesMoveable === undefined || gridMoveable === undefined) return;
+  const { velocity: outlinesVelocity } = outlinesMoveable;
+  const { velocity: gridVelocity } = gridMoveable;
+  vec2.setV(outlinesVelocity, gridVelocity);
+};
+
+export const updateOutlines = (outlines: Outlines, worldRow: number, worldCol: number): Outlines => {
   const top = Math.floor(worldRow / CHUNK_ROWS) * CHUNK_ROWS;
   const left = Math.floor(worldCol / CHUNK_COLS) * CHUNK_COLS;
   const chunk = getChunk(top, left);
@@ -83,11 +97,10 @@ export const updateOutlines = (outlines: BaseEntity, worldRow: number, worldCol:
   return outlines;
 };
 
-const addOutlinesDrawable = (outlines: BaseEntity): Drawable => {
+const addOutlinesDrawable = (outlines: Outlines): Drawable => {
   const points = [ vec2.zero(), vec2.zero(), vec2.zero(), vec2.zero() ];
   const drawable = addDrawable(outlines, mkPathDrawable(points, false));
-  const { offset, pathInfo } = drawable;
-  offset.y += Y_OFFSET;
+  const { pathInfo } = drawable;
   if (pathInfo !== undefined) {
     pathInfo.width = LINE_WIDTH;
     pathInfo.joinStyle = JoinStyle.ROUND;
