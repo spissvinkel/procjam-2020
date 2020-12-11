@@ -8,7 +8,7 @@ import { adjustWorldCol, adjustWorldRow, freeWorldChunks, getWorldCell } from '.
 import { initOutlines, mkOutlines, Outlines, updateOutlines } from '../debug/outlines';
 import { initPlayer, mkPlayer, Player } from './player';
 import { getDeltaTimeSeconds } from '../time-mgr';
-import { CHUNK_COLS, CHUNK_ROWS, ItemType } from '../world-mgr';
+import { getChunk, ItemType } from '../world-mgr';
 
 export interface Scene {
   entities: BaseEntity[];
@@ -68,21 +68,16 @@ const initEntities = (): void => {
   addEntity(initGrid(grid));
   addEntity(initOutlines(outlines));
   // TODO: refactor this
-  updateFeedback(feedback, worldRow, worldCol, feedbackRow, feedbackCol);
-  updateGridCells(grid, worldRow, worldCol);
-  updateOutlines(outlines, worldRow, worldCol);
+  const { cRow, cCol } = getChunk(0, 0);
+  updateFeedback(feedback, cRow, cCol, 0, 0);
+  updateGridCells(grid, cRow, cCol);
+  updateOutlines(outlines, cRow, cCol);
   freeWorldChunks();
 };
 
 const initCamera = (): void => addEntity(scene.camera);
 
 export const addEntity = (entity: BaseEntity): void => { scene.entities.push(entity); };
-
-// TODO: organise/refactor this
-// eslint-disable-next-line prefer-const
-export let worldRow = Math.floor(CHUNK_ROWS / 2), worldCol = Math.floor(CHUNK_COLS / 2);
-// eslint-disable-next-line prefer-const
-export let feedbackRow = 0, feedbackCol = 0;
 
 /**
  *
@@ -91,12 +86,13 @@ export let feedbackRow = 0, feedbackCol = 0;
  */
 export const gridClick = (gridRow: number, gridCol: number): void => {
   const { grid, feedback, outlines } = getScene();
+  const { worldRow, worldCol } = grid;
   const { ground, item } = getWorldCell(worldRow, worldCol, gridRow, gridCol);
   if (!ground || item !== ItemType.EMPTY) return;
-  worldRow = adjustWorldRow(worldRow, gridRow);
-  worldCol = adjustWorldCol(worldCol, gridCol);
-  updateFeedback(feedback, worldRow, worldCol, feedbackRow = 0, feedbackCol = 0);
-  updateGridCells(grid, worldRow, worldCol);
-  if (getDebugState() !== DebugState.DEBUG_OFF) updateOutlines(outlines, worldRow, worldCol);
+  const newRow = adjustWorldRow(worldRow, gridRow);
+  const newCol = adjustWorldCol(worldCol, gridCol);
+  updateFeedback(feedback, newRow, newCol, 0, 0);
+  updateGridCells(grid, newRow, newCol);
+  if (getDebugState() !== DebugState.DEBUG_OFF) updateOutlines(outlines, newRow, newCol);
   freeWorldChunks();
 };

@@ -6,6 +6,9 @@ import { CELL_Z_OFFSET, CELL_X_OFFSET, TxSpec, TX_SPECS, world2grid, grid2world 
 import { Entity, mkBaseEntity } from './entity';
 import { addPolledKeys, Input, poll } from '../input-mgr';
 import { mkMoveable } from './moveable';
+import { getScene } from './scene-mgr';
+import { getWorldCell } from '../grid-mgr';
+import { ItemType } from '../world-mgr';
 
 export const Direction = {
   N : TX_SPECS.CH_DIG_N,
@@ -74,14 +77,27 @@ const updateVelocity = (player: Player): void => {
   velocity.y *= MAX_VELOCITY_Y;
 };
 
-const updatePosition = (player: Player): void => {
-  const { position, offset } = player;
+const updatePosition = (player: Player, deltaTimeSeconds: number): void => {
+  const { position, moveable, gridRow: oldRow, gridCol: oldCol, offset } = player;
   mat3.mulV2(world2grid, position, offset);
-  const gridRow = Math.floor(-offset.y + 0.5);
-  const gridCol = Math.floor(offset.x + 0.5);
-  vec2.set(offset, gridCol, -gridRow);
+  let newRow = Math.floor(-offset.y + 0.5);
+  let newCol = Math.floor(offset.x + 0.5);
+  if (!(newRow === oldRow && newCol === oldCol)) {
+    // Don't step into the void
+    const { grid: { worldRow, worldCol } } = getScene();
+    const { ground, item } = getWorldCell(worldRow, worldCol, newRow, newCol);
+    if (!(ground && item === ItemType.EMPTY) && moveable !== undefined) {
+      const { velocity } = moveable;
+      vec2.addMul(position, vec2.inv(velocity), deltaTimeSeconds);
+      vec2.setZero(velocity);
+      mat3.mulV2(world2grid, position, offset);
+      newRow = Math.floor(-offset.y + 0.5);
+      newCol = Math.floor(offset.x + 0.5);
+    }
+  }
+  vec2.set(offset, newCol, -newRow);
   mat3.mulV2(grid2world, offset, offset);
   vec2.subVInto(position, offset, offset);
-  player.gridRow = gridRow;
-  player.gridCol = gridCol;
+  player.gridRow = newRow;
+  player.gridCol = newCol;
 };

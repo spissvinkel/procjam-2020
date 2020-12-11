@@ -53,7 +53,10 @@ const resumeCallback = (timeMillis: number): void => {
   window.requestAnimationFrame(doNextFrame);
 };
 
-const togglePaused = (): void => runState.paused ? resume() : pause();
+const togglePaused = (): void => {
+  if (runState.paused) resume();
+  else if (DebugMgr.getDebugState() !== DebugMgr.DebugState.DEBUG_OFF) pause();
+};
 
 const init = (): void => {
   initViewport();
