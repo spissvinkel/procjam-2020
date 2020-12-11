@@ -14,8 +14,8 @@ export interface Drawable {
 }
 
 export interface TxInfo {
-  textureId: string;
-  image    : HTMLImageElement;
+  txSpec: TxSpec;
+  image : HTMLImageElement;
 }
 
 export interface PathInfo {
@@ -29,6 +29,7 @@ export interface PathInfo {
 export interface TxSpec {
   txId  : string;
   offset: Vec2;
+  isItem: boolean;
 }
 
 export const enum CapStyle  { BUTT = 'butt', ROUND = 'round', SQUARE = 'square' }
@@ -36,43 +37,43 @@ export const enum JoinStyle { MITER = 'miter', ROUND = 'round', BEVEL = 'bevel' 
 
 export const PX_SCALE = 1 / 100;
 
-const mkTxSpec = (txId: string, xOffset: number, yOffset: number): TxSpec => {
+const mkTxSpec = (txId: string, xOffset: number, yOffset: number, isItem: boolean): TxSpec => {
   const offset = vec2.mul(vec2.of(xOffset, yOffset), PX_SCALE);
-  return { txId, offset };
+  return { txId, offset, isItem };
 };
 
 export const TX_SPECS = {
-  FEEDBACK  : mkTxSpec('feedback',                     -75,   54.5),
+  FEEDBACK  : mkTxSpec('feedback',                     -75,   54.5, false),
 
-  BLOCK     : mkTxSpec('cliff-brown-block-quarter',    -75,   54.5),
-  BLOCK_DARK: mkTxSpec('cliff-brown-block-quart-dark', -75,   54.5),
+  BLOCK     : mkTxSpec('cliff-brown-block-quarter',    -75,   54.5, false),
+  BLOCK_DARK: mkTxSpec('cliff-brown-block-quart-dark', -75,   54.5, false),
 
-  TOP_SIDE_E: mkTxSpec('cliff-brown-top-e',            -75,   54.5),
-  TOP_SIDE_N: mkTxSpec('cliff-brown-top-n',            -75,   17.5),
-  TOP_SIDE_S: mkTxSpec('cliff-brown-top-s',            -35,   53.5),
-  TOP_SIDE_W: mkTxSpec('cliff-brown-top-w',            -34,   17.5),
+  TOP_SIDE_E: mkTxSpec('cliff-brown-top-e',            -75,   54.5, false),
+  TOP_SIDE_N: mkTxSpec('cliff-brown-top-n',            -75,   17.5, false),
+  TOP_SIDE_S: mkTxSpec('cliff-brown-top-s',            -35,   53.5, false),
+  TOP_SIDE_W: mkTxSpec('cliff-brown-top-w',            -34,   17.5, false),
 
-  TOP_OUT_NE: mkTxSpec('cliff-brown-corner-top-ne',    -75,   17.5),
-  TOP_OUT_NW: mkTxSpec('cliff-brown-corner-top-nw',    -34,  -35.5),
-  TOP_OUT_SE: mkTxSpec('cliff-brown-corner-top-se',    -34,   54.0),
-  TOP_OUT_SW: mkTxSpec('cliff-brown-corner-top-sw',     40,   17.5),
+  TOP_OUT_NE: mkTxSpec('cliff-brown-corner-top-ne',    -75,   17.5, false),
+  TOP_OUT_NW: mkTxSpec('cliff-brown-corner-top-nw',    -34,  -35.5, false),
+  TOP_OUT_SE: mkTxSpec('cliff-brown-corner-top-se',    -34,   54.0, false),
+  TOP_OUT_SW: mkTxSpec('cliff-brown-corner-top-sw',     40,   17.5, false),
 
-  TOP_IN_NE : mkTxSpec('cliff-brown-inner-top-ne',     -75,   54.0),
-  TOP_IN_NW : mkTxSpec('cliff-brown-inner-top-nw',     -75,   17.5),
-  TOP_IN_SE : mkTxSpec('cliff-brown-inner-top-se',     -75,   54.0),
-  TOP_IN_SW : mkTxSpec('cliff-brown-inner-top-sw',     -34,   54.0),
+  TOP_IN_NE : mkTxSpec('cliff-brown-inner-top-ne',     -75,   54.0, false),
+  TOP_IN_NW : mkTxSpec('cliff-brown-inner-top-nw',     -75,   17.5, false),
+  TOP_IN_SE : mkTxSpec('cliff-brown-inner-top-se',     -75,   54.0, false),
+  TOP_IN_SW : mkTxSpec('cliff-brown-inner-top-sw',     -34,   54.0, false),
 
-  TREE_O_D_W: mkTxSpec('tree-oak-dark-w',              -37,  105.5),
-  LOGS_S_W  : mkTxSpec('logs-stack-w',                 -53,   43.5),
+  TREE_O_D_W: mkTxSpec('tree-oak-dark-w',              -37,  105.5, true),
+  LOGS_S_W  : mkTxSpec('logs-stack-w',                 -53,   43.5, true),
 
-  CH_DIG_NE : mkTxSpec('char-digger-ne',               -22,   75.0),
-  CH_DIG_NW : mkTxSpec('char-digger-nw',               -26,   70.5),
-  CH_DIG_SE : mkTxSpec('char-digger-se',               -26,   70.5),
-  CH_DIG_SW : mkTxSpec('char-digger-sw',               -22,   75.0),
-  CH_DIG_E  : mkTxSpec('char-digger-e',                -26,   73.0),
-  CH_DIG_N  : mkTxSpec('char-digger-n',                -23,   73.0),
-  CH_DIG_S  : mkTxSpec('char-digger-s',                -23,   73.0),
-  CH_DIG_W  : mkTxSpec('char-digger-w',                -27,   73.0)
+  CH_DIG_NE : mkTxSpec('char-digger-ne',               -22,   75.0, true),
+  CH_DIG_NW : mkTxSpec('char-digger-nw',               -26,   70.5, true),
+  CH_DIG_SE : mkTxSpec('char-digger-se',               -26,   70.5, true),
+  CH_DIG_SW : mkTxSpec('char-digger-sw',               -22,   75.0, true),
+  CH_DIG_E  : mkTxSpec('char-digger-e',                -26,   73.0, true),
+  CH_DIG_N  : mkTxSpec('char-digger-n',                -23,   73.0, true),
+  CH_DIG_S  : mkTxSpec('char-digger-s',                -23,   73.0, true),
+  CH_DIG_W  : mkTxSpec('char-digger-w',                -27,   73.0, true)
 };
 
 export const CELL_X_OFFSET = 73 * PX_SCALE; // + 0.02;
@@ -88,20 +89,21 @@ const gridRot = mat2.setRot(mat2.id(), Maths.deg2rad(-45));
 export const grid2world = mat3.mulM2(mat3.setScaleV(mat3.id(), gridScale), gridRot);
 export const world2grid = mat3.invInto(grid2world, mat3.id());
 
-export const mkTxDrawable = (textureId: string, enabled: boolean): Drawable => {
-  const image = document.getElementById(`tx-${textureId}`) as HTMLImageElement;
+export const mkTxDrawable = (txSpec: TxSpec, enabled: boolean): Drawable => {
+  const { txId } = txSpec;
+  const image = document.getElementById(`tx-${txId}`) as HTMLImageElement;
   const { width, height } = image;
   const size = vec2.mul(vec2.of(width, height), PX_SCALE);
   const offset = vec2.zero(); // Image origin is top left
-  return { enabled, size, offset, txInfo: { textureId, image } };
+  return { enabled, size, offset, txInfo: { txSpec, image } };
 };
 
-export const updateTxDrawable = (drawable: Drawable, textureId: string, enabled: boolean): Drawable => {
+export const updateTxDrawable = (drawable: Drawable, txSpec: TxSpec, enabled: boolean): Drawable => {
   const { size, offset, txInfo } = drawable;
   if (txInfo !== undefined) {
     drawable.enabled = enabled;
-    txInfo.textureId = textureId;
-    const { width, height } = txInfo.image = document.getElementById(`tx-${textureId}`) as HTMLImageElement;
+    const { txId } = txInfo.txSpec = txSpec;
+    const { width, height } = txInfo.image = document.getElementById(`tx-${txId}`) as HTMLImageElement;
     vec2.mul(vec2.set(size, width, height), PX_SCALE);
     vec2.setZero(offset); // Image origin is top left
   }

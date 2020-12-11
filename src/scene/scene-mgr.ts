@@ -63,10 +63,10 @@ export const init = (): void => {
 
 const initEntities = (): void => {
   const { grid, feedback, player, outlines } = scene;
-  addEntity(initGrid(grid));
   addEntity(initFeedback(feedback));
-  addEntity(initOutlines(outlines));
   addEntity(initPlayer(player));
+  addEntity(initGrid(grid));
+  addEntity(initOutlines(outlines));
   // TODO: refactor this
   updateFeedback(feedback, worldRow, worldCol, feedbackRow, feedbackCol);
   updateGridCells(grid, worldRow, worldCol);

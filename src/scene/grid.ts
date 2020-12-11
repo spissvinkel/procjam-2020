@@ -4,14 +4,16 @@ import * as vec2 from '@spissvinkel/maths/vec2';
 import { addCellOffset, Drawable, mkTxDrawable, TxSpec, TX_SPECS, updateTxDrawable } from './drawable';
 import { addDrawable, Entity, mkBaseEntity } from './entity';
 import { getWorldCell, GRID_COLS, GRID_ROWS, HALF_GRID_COLS, HALF_GRID_ROWS, TOP_LEFT_GRID_COL, TOP_LEFT_GRID_ROW } from '../grid-mgr';
-import { ItemType } from '../world-mgr';
 import { getScene } from './scene-mgr';
+import { ItemType } from '../world-mgr';
 
 export interface Grid extends Entity<Grid> {
-  worldRow: number; // centre
-  worldCol: number; // centre
-  offset  : Vec2;
-  extent  : { min: Vec2, max: Vec2 };
+  worldRow  : number; // centre
+  worldCol  : number; // centre
+  offset    : Vec2;
+  extent    : { min: Vec2, max: Vec2 };
+  playerDI  : number; // drawable index
+  feedbackDI: number; // drawable index
 }
 
 export const mkGrid = (): Grid => {
@@ -27,40 +29,105 @@ export const mkGrid = (): Grid => {
     min: vec2.of(cellOffsetSW.x, cellOffsetSE.y),
     max: vec2.of(cellOffsetNE.x, cellOffsetNW.y)
   };
-  // console.log(`extent min: ${vec2.toString(grid.extent.min)}, max: ${vec2.toString(grid.extent.max)}`);
+  grid.playerDI = -1;
+  grid.feedbackDI = -1;
   return grid;
 };
 
 export const initGrid = (grid: Grid): Grid => {
+  grid.updateVelocity = updateVelocity;
+  grid.updatePosition = updatePosition;
   return grid;
+};
+
+const updateVelocity = (grid: Grid): void => {
+  //
+};
+
+const updatePosition = (grid: Grid): void => {
+  const { drawables, worldRow, worldCol, playerDI } = grid;
+  const maxPdi = drawables.length - 1;
+  let pdi = playerDI;
+  if (pdi < 0) return;
+  const { player: { gridRow, gridCol, offset, facing } } = getScene();
+  if (!(gridRow === 0 && gridCol === 0)) {
+    // updateGridCells(grid, )
+  }
+  const pd = drawables[pdi];
+  setGridCellOffset(updateTxDrawable(pd, facing, true), gridRow, gridCol, offset);
+  let di: number;
+  let d: Drawable;
+  while (pdi > 0 && compareOffsets(pd, (d = drawables[di = pdi - 1])) < 0) {
+    drawables[di] = pd;
+    drawables[pdi] = d;
+    pdi = di;
+  }
+  if (pdi === playerDI) {
+    while (pdi < maxPdi && (d = drawables[di = pdi + 1]).enabled && compareOffsets(pd, d) > 0) {
+      drawables[di] = pd;
+      drawables[pdi] = d;
+      pdi = di;
+    }
+  }
+  grid.playerDI = pdi;
+};
+
+type CompRes = -1 | 0 | 1;
+
+const E = 0.0000001;
+
+const compareOffsets = (d1: Drawable, d2: Drawable): CompRes => {
+  const { offset: dOffset1, txInfo: txInfo1 } = d1;
+  const { offset: dOffset2, txInfo: txInfo2 } = d2;
+  if (txInfo1 === undefined || txInfo2 === undefined) return 0;
+  const { txSpec: { offset: txOffset1 } } = txInfo1;
+  const { txSpec: { offset: txOffset2 } } = txInfo2;
+  // const x1 = dOffset1.x - txOffset1.x;
+  const y1 = dOffset1.y - txOffset1.y;
+  // const x2 = dOffset2.x - txOffset2.x;
+  const y2 = dOffset2.y - txOffset2.y;
+  const yd = y1 - y2;
+  // const xd = x1 - x2;
+  if (yd > E) return -1;
+  else if (yd < E) return 1;
+  // else if (xd < E) return -1;
+  // else if (xd > E) return 1;
+  return 0;
 };
 
 export const updateGridCells = (grid: Grid, worldRow: number, worldCol: number): Grid => {
   const { BLOCK, BLOCK_DARK, TREE_O_D_W, LOGS_S_W } = TX_SPECS;
   grid.worldRow = worldRow;
   grid.worldCol = worldCol;
-  const { drawables } = grid;
-  const {
-    feedback: { gridRow: fbGridRow, gridCol: fbGridCol, txSpec: fbTxSpec },
-    player: { gridPos: { x: playerGridCol, y: playerGridRow }, facing: playerTxSpec }
-  } = getScene();
+  const { drawables, offset: gridOffset } = grid;
+  const { feedback, player } = getScene();
+  const { gridRow: fbGridRow, gridCol: fbGridCol, offset: fbOffset, txSpec: fbTxSpec } = feedback;
+  const { gridRow: playerGridRow, gridCol: playerGridCol, offset: playerOffset, facing: playerTxSpec } = player;
   let di = 0;
-  let txSpec: TxSpec;
+  // Add terrain drawables
   forEachGridCell((gridRow, gridCol) => {
-    const { ground, even, item } = getWorldCell(worldRow, worldCol, gridRow, gridCol);
+    const { ground, even } = getWorldCell(worldRow, worldCol, gridRow, gridCol);
     if (ground)
-      di = addOrUpdateTxDrawable(grid, gridRow, gridCol, di, even ? BLOCK_DARK : BLOCK);
+      di = addOrUpdateTxDrawable(grid, gridRow, gridCol, di, even ? BLOCK_DARK : BLOCK, gridOffset);
     else
       di = updateEdge(grid, worldRow, worldCol, gridRow, gridCol, di);
-    if (gridRow === fbGridRow && gridCol === fbGridCol)
-      di = addOrUpdateTxDrawable(grid, gridRow, gridCol, di, fbTxSpec);
-    if (ground && item !== ItemType.EMPTY) {
-      if (item === ItemType.TREE) txSpec = TREE_O_D_W;
-      else if (item === ItemType.LOGS) txSpec = LOGS_S_W;
-      di = addOrUpdateTxDrawable(grid, gridRow, gridCol, di, txSpec);
+    if (gridRow === fbGridRow && gridCol === fbGridCol) {
+      grid.feedbackDI = di;
+      di = addOrUpdateTxDrawable(grid, fbGridRow, fbGridCol, di, fbTxSpec, fbOffset);
     }
-    if (gridRow === playerGridRow && gridCol === playerGridCol)
-      di = addOrUpdateTxDrawable(grid, gridRow, gridCol, di, playerTxSpec);
+  });
+  // Add item drawables
+  forEachGridCell((gridRow, gridCol) => {
+    const { item } = getWorldCell(worldRow, worldCol, gridRow, gridCol);
+    let txSpec: TxSpec | undefined = undefined;
+    if (item === ItemType.TREE) txSpec = TREE_O_D_W;
+    else if (item === ItemType.LOGS) txSpec = LOGS_S_W;
+    if (txSpec !== undefined)
+      di = addOrUpdateTxDrawable(grid, gridRow, gridCol, di, txSpec, gridOffset);
+    if (gridRow === playerGridRow && gridCol === playerGridCol) {
+      grid.playerDI = di;
+      di = addOrUpdateTxDrawable(grid, playerGridRow, playerGridCol, di, playerTxSpec, playerOffset);
+    }
   });
   // Disable unused drawables
   while (di < drawables.length) drawables[di++].enabled = false;
@@ -135,23 +202,24 @@ const updateEdge = (grid: Grid, wr: number, wc: number, gr: number, gc: number, 
       && !(gRp1C ?? (gRp1C = getWorldCell(wr, wc, gr + 1, gc).ground)))
     txSpec = TOP_SIDE_W;
   if (txSpec === undefined) return di;
-  return addOrUpdateTxDrawable(grid, gr, gc, di, txSpec);
+  return addOrUpdateTxDrawable(grid, gr, gc, di, txSpec, grid.offset);
 };
 
-const addOrUpdateTxDrawable = (grid: Grid, gridRow: number, gridCol: number, di: number, txSpec: TxSpec): number => {
+const addOrUpdateTxDrawable = (
+  grid: Grid, gridRow: number, gridCol: number, di: number, txSpec: TxSpec, entityOffset: Vec2
+): number => {
   const { drawables } = grid;
-  const { txId } = txSpec;
-  const d = drawables.length === di ? addDrawable(grid, mkTxDrawable(txId, false)) : drawables[di];
+  const d = drawables.length === di ? addDrawable(grid, mkTxDrawable(txSpec, false)) : drawables[di];
   d.enabled = true;
-  setGridCellOffset(updateTxDrawable(d, txId, true), grid, txSpec, gridRow, gridCol);
+  setGridCellOffset(updateTxDrawable(d, txSpec, true), gridRow, gridCol, entityOffset);
   return di + 1;
 };
 
-export const setGridCellOffset = (drawable: Drawable, grid: Grid, txSpec: TxSpec, gridRow: number, gridCol: number): void => {
-  const { offset: gridOffset     } = grid;
-  const { offset: txSpecOffset   } = txSpec;
-  const { offset: drawableOffset } = drawable;
-  addCellOffset(vec2.addV(vec2.addV(drawableOffset, txSpecOffset), gridOffset), gridRow, gridCol);
+export const setGridCellOffset = (drawable: Drawable, gridRow: number, gridCol: number, entityOffset: Vec2): void => {
+  const { offset: drawableOffset, txInfo } = drawable;
+  if (txInfo === undefined) return;
+  const { txSpec: { offset: txSpecOffset } } = txInfo;
+  addCellOffset(vec2.addV(vec2.addV(drawableOffset, txSpecOffset), entityOffset), gridRow, gridCol);
 };
 
 export const forEachGridCell = (f: (gridRow: number, gridCol: number) => void): void => {

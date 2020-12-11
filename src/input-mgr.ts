@@ -14,6 +14,7 @@ export const enum Input {
   P1_LEFT  = 'a',
   P1_DOWN  = 's',
   P1_RIGHT = 'd',
+  P1_DEBUG = 'space',
 }
 
 export type Callback = () => void
@@ -242,17 +243,17 @@ type TouchBtn = { div: HTMLElement, key: Input, top: number, right: number, bott
 
 const touchBtns: TouchBtn[] = [ ];
 
-const touchMap: { [ id: number ]: number; } = { };
+// const touchMap: { [ id: number ]: number; } = { };
 
-const addTouchBtn = (id: string, key: Input): TouchBtn | null => {
-  const div = document.getElementById(id);
-  if (div === null) return null;
-  const btn: TouchBtn = { div, key, top: 0, right: 0, bottom: 0, left: 0 };
-  if (btn.div.parentElement !== null) btn.div.parentElement.classList.remove('off');
-  resizeTouchBtn(btn);
-  touchBtns.push(btn);
-  return btn;
-};
+// const addTouchBtn = (id: string, key: Input): TouchBtn | null => {
+//   const div = document.getElementById(id);
+//   if (div === null) return null;
+//   const btn: TouchBtn = { div, key, top: 0, right: 0, bottom: 0, left: 0 };
+//   if (btn.div.parentElement !== null) btn.div.parentElement.classList.remove('off');
+//   resizeTouchBtn(btn);
+//   touchBtns.push(btn);
+//   return btn;
+// };
 
 const resizeTouchBtn = (btn: TouchBtn): void => {
   btn.top = btn.div.offsetTop;
@@ -266,45 +267,45 @@ const resizeTouchBtn = (btn: TouchBtn): void => {
   btn.right = btn.left + btn.div.offsetWidth;
 };
 
-const insideTouchBtn = (btn: TouchBtn, x: number, y: number): boolean => {
-  return x >= btn.left && x < btn.right && y >= btn.top && y < btn.bottom;
-};
+// const insideTouchBtn = (btn: TouchBtn, x: number, y: number): boolean => {
+//   return x >= btn.left && x < btn.right && y >= btn.top && y < btn.bottom;
+// };
 
-const onTouchEvent = (event: TouchEvent): void => {
-  let isStart = false, isMove = false, isEnd = false;
-  switch (event.type) {
-    case 'touchstart' : { isStart = true;  break; }
-    case 'touchmove'  : { isMove  = true;  break; }
-    case 'touchend'   : { isEnd   = true;  break; }
-    case 'touchcancel': { isEnd   = true;  break; }
-    default: return;
-  }
-  const touches = event.changedTouches, n = touches.length, m = touchBtns.length;
-  let touch: Touch, id: number, x: number, y: number, btn: TouchBtn, current: TouchBtn | undefined = undefined;
-  for (let i = 0; i < n; i++) {
-    touch = touches[i];
-    id = touch.identifier;
-    x = touch.pageX;
-    y = touch.pageY;
-    if (isMove || isEnd) {
-      current = touchBtns[touchMap[id]];
-      if (current !== undefined && (isEnd || !insideTouchBtn(current, x, y))) {
-        keyUp(event, current.key);
-        delete touchMap[id];
-      }
-    }
-    if (isStart || isMove) {
-      for (let j = 0; j < m; j++) {
-        btn = touchBtns[j];
-        if ((isStart || btn !== current) && insideTouchBtn(btn, x, y)) {
-          touchMap[id] = j;
-          keyDown(event, btn.key);
-          break;
-        }
-      }
-    }
-  }
-};
+// const onTouchEvent = (event: TouchEvent): void => {
+//   let isStart = false, isMove = false, isEnd = false;
+//   switch (event.type) {
+//     case 'touchstart' : { isStart = true;  break; }
+//     case 'touchmove'  : { isMove  = true;  break; }
+//     case 'touchend'   : { isEnd   = true;  break; }
+//     case 'touchcancel': { isEnd   = true;  break; }
+//     default: return;
+//   }
+//   const touches = event.changedTouches, n = touches.length, m = touchBtns.length;
+//   let touch: Touch, id: number, x: number, y: number, btn: TouchBtn, current: TouchBtn | undefined = undefined;
+//   for (let i = 0; i < n; i++) {
+//     touch = touches[i];
+//     id = touch.identifier;
+//     x = touch.pageX;
+//     y = touch.pageY;
+//     if (isMove || isEnd) {
+//       current = touchBtns[touchMap[id]];
+//       if (current !== undefined && (isEnd || !insideTouchBtn(current, x, y))) {
+//         keyUp(event, current.key);
+//         delete touchMap[id];
+//       }
+//     }
+//     if (isStart || isMove) {
+//       for (let j = 0; j < m; j++) {
+//         btn = touchBtns[j];
+//         if ((isStart || btn !== current) && insideTouchBtn(btn, x, y)) {
+//           touchMap[id] = j;
+//           keyDown(event, btn.key);
+//           break;
+//         }
+//       }
+//     }
+//   }
+// };
 
 const resizeTouchInput = (): void => touchBtns.forEach(resizeTouchBtn);
 
