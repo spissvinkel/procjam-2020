@@ -3,10 +3,11 @@ import * as vec2 from '@spissvinkel/maths/vec2';
 
 import { addCellOffset, Drawable, grid2world, JoinStyle, mkPathDrawable, PX_SCALE } from '../scene/drawable';
 import { addDrawable, Entity, mkBaseEntity } from '../scene/entity';
+import { getWorldChunk, getWorldChunkLeft, getWorldChunkTop } from '../grid-mgr';
 import { mkMoveable } from '../scene/moveable';
 import { getScene } from '../scene/scene-mgr';
 import { setHexRGBA } from '../utils';
-import { CHUNK_COLS, CHUNK_ROWS, getChunk, HALF_CHUNK_COLS, HALF_CHUNK_ROWS } from '../world-mgr';
+import { CHUNK_COLS, CHUNK_ROWS, HALF_CHUNK_COLS, HALF_CHUNK_ROWS } from '../world-mgr';
 
 const LINE_WIDTH = 7.0 * PX_SCALE;
 
@@ -38,9 +39,9 @@ const updateVelocity = (outlines: Outlines): void => {
 };
 
 export const updateOutlines = (outlines: Outlines, worldRow: number, worldCol: number): Outlines => {
-  const top = Math.floor(worldRow / CHUNK_ROWS) * CHUNK_ROWS;
-  const left = Math.floor(worldCol / CHUNK_COLS) * CHUNK_COLS;
-  const chunk = getChunk(top, left);
+  const top = getWorldChunkTop(worldRow);
+  const left = getWorldChunkLeft(worldCol);
+  const chunk = getWorldChunk(top, left);
   const { mainRect, bridgeRects, cornerRects } = chunk;
 
   const { drawables } = outlines;

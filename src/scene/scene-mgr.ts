@@ -1,14 +1,13 @@
 import { Camera, mkCamera, resizeCamera } from './camera';
-import { DebugState, getDebugState } from '../debug/debug-mgr';
 import { Viewport } from '../engine';
 import { BaseEntity, cleanEntity, updateEntity } from './entity';
 import { Feedback, mkFeedback, initFeedback, updateFeedback } from './feedback';
 import { Grid, initGrid, mkGrid, updateGridCells } from './grid';
-import { adjustWorldCol, adjustWorldRow, freeWorldChunks, getWorldCell } from '../grid-mgr';
+import { freeWorldChunks, getWorldChunk } from '../grid-mgr';
+import { searchGraph } from '../nav-mgr';
 import { initOutlines, mkOutlines, Outlines, updateOutlines } from '../debug/outlines';
 import { initPlayer, mkPlayer, Player } from './player';
 import { getDeltaTimeSeconds } from '../time-mgr';
-import { getChunk, ItemType } from '../world-mgr';
 
 export interface Scene {
   entities: BaseEntity[];
@@ -67,8 +66,8 @@ const initEntities = (): void => {
   addEntity(initPlayer(player));
   addEntity(initGrid(grid));
   addEntity(initOutlines(outlines));
-  // TODO: refactor this
-  const { cRow, cCol } = getChunk(0, 0);
+  // TODO: refactor this, probably
+  const { cRow, cCol } = getWorldChunk(0, 0);
   updateFeedback(feedback, cRow, cCol, 0, 0);
   updateGridCells(grid, cRow, cCol);
   updateOutlines(outlines, cRow, cCol);
@@ -79,20 +78,41 @@ const initCamera = (): void => addEntity(scene.camera);
 
 export const addEntity = (entity: BaseEntity): void => { scene.entities.push(entity); };
 
-/**
- *
- * @param row terrain relative row (0 is middle of terrain)
- * @param col terrain relative column (0 is middle of terrain)
- */
+// TODO: refactor this
 export const gridClick = (gridRow: number, gridCol: number): void => {
-  const { grid, feedback, outlines } = getScene();
+  const { grid, feedback, player } = getScene();
   const { worldRow, worldCol } = grid;
-  const { ground, item } = getWorldCell(worldRow, worldCol, gridRow, gridCol);
-  if (!ground || item !== ItemType.EMPTY) return;
-  const newRow = adjustWorldRow(worldRow, gridRow);
-  const newCol = adjustWorldCol(worldCol, gridCol);
-  updateFeedback(feedback, newRow, newCol, 0, 0);
-  updateGridCells(grid, newRow, newCol);
-  if (getDebugState() !== DebugState.DEBUG_OFF) updateOutlines(outlines, newRow, newCol);
-  freeWorldChunks();
+  const { gridRow: playerRow, gridCol: playerCol } = player;
+  updateFeedback(feedback, worldRow, worldCol, gridRow, gridCol);
+  console.log(`startRow: ${gridRow}, startCol: ${gridCol}`);
+  let currentNode = searchGraph(gridRow, gridCol, playerRow, playerCol);
+  while (!(currentNode.row === gridRow && currentNode.col === gridCol)) {
+    const { row, col, cost: currentCost, neighbours } = currentNode;
+    console.log(`node row: ${row}, col: ${col}, cost: ${currentCost}`);
+    let firstIx = 0;
+    let nextNode;
+    while (firstIx < neighbours.length && (nextNode = neighbours[firstIx]) === undefined) firstIx++;
+    if (nextNode === undefined) break;
+    let nextCost = nextNode.cost;
+    for (let i = firstIx + 1; i < neighbours.length; i++) {
+      const node = neighbours[i];
+      if (node === undefined) continue;
+      const { cost } = node;
+      if (cost < nextCost) {
+        nextCost = cost;
+        nextNode = node;
+      }
+    }
+    currentNode = nextNode;
+  }
+  const { row, col, cost } = currentNode;
+  console.log(`final node row: ${row}, col: ${col}, cost: ${cost}`);
+  // const { ground, item } = getWorldCell(worldRow, worldCol, gridRow, gridCol);
+  // if (!ground || item !== ItemType.EMPTY) return;
+  // const newRow = adjustWorldRow(worldRow, gridRow);
+  // const newCol = adjustWorldCol(worldCol, gridCol);
+  // updateFeedback(feedback, newRow, newCol, 0, 0);
+  // updateGridCells(grid, newRow, newCol);
+  // if (getDebugState() !== DebugState.DEBUG_OFF) updateOutlines(outlines, newRow, newCol);
+  // freeWorldChunks();
 };

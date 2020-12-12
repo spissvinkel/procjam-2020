@@ -6,20 +6,21 @@ import { CELL_Z_OFFSET, CELL_X_OFFSET, TxSpec, TX_SPECS, world2grid, grid2world 
 import { Entity, mkBaseEntity } from './entity';
 import { addPolledKeys, Input, poll } from '../input-mgr';
 import { mkMoveable } from './moveable';
+import { Direction } from '../nav-mgr';
 import { getScene } from './scene-mgr';
 import { getWorldCell } from '../grid-mgr';
 import { ItemType } from '../world-mgr';
 
-export const Direction = {
-  N : TX_SPECS.CH_DIG_N,
-  NE: TX_SPECS.CH_DIG_NE,
-  E : TX_SPECS.CH_DIG_E,
-  SE: TX_SPECS.CH_DIG_SE,
-  S : TX_SPECS.CH_DIG_S,
-  SW: TX_SPECS.CH_DIG_SW,
-  W : TX_SPECS.CH_DIG_W,
-  NW: TX_SPECS.CH_DIG_NW
-};
+const TxSpecs = [
+  TX_SPECS.CH_DIG_N,
+  TX_SPECS.CH_DIG_NE,
+  TX_SPECS.CH_DIG_E,
+  TX_SPECS.CH_DIG_SE,
+  TX_SPECS.CH_DIG_S,
+  TX_SPECS.CH_DIG_SW,
+  TX_SPECS.CH_DIG_W,
+  TX_SPECS.CH_DIG_NW
+];
 
 const VELOCITY_Y_FACTOR = CELL_Z_OFFSET / CELL_X_OFFSET;
 const MAX_VELOCITY_X = 3.5;
@@ -37,7 +38,7 @@ export const mkPlayer = (): Player => {
   player.gridRow = 0;
   player.gridCol = 0;
   player.offset = vec2.zero();
-  player.facing = Direction.SE;
+  player.facing = TxSpecs[Direction.SE];
   return player;
 };
 
@@ -55,16 +56,16 @@ const updateVelocity = (player: Player): void => {
   const { velocity } = moveable;
   let newFacing = facing;
   if (poll(Input.P1_LEFT)) {
-    if (poll(Input.P1_UP)) newFacing = Direction.W;
-    else if (poll(Input.P1_DOWN)) newFacing = Direction.S;
-    else newFacing = Direction.SW;
+    if (poll(Input.P1_UP)) newFacing = TxSpecs[Direction.W];
+    else if (poll(Input.P1_DOWN)) newFacing = TxSpecs[Direction.S];
+    else newFacing = TxSpecs[Direction.SW];
   } else if (poll(Input.P1_RIGHT)) {
-    if (poll(Input.P1_UP)) newFacing = Direction.N;
-    else if (poll(Input.P1_DOWN)) newFacing = Direction.E;
-    else newFacing = Direction.NE;
+    if (poll(Input.P1_UP)) newFacing = TxSpecs[Direction.N];
+    else if (poll(Input.P1_DOWN)) newFacing = TxSpecs[Direction.E];
+    else newFacing = TxSpecs[Direction.NE];
   } else {
-    if (poll(Input.P1_UP)) newFacing = Direction.NW;
-    else if (poll(Input.P1_DOWN)) newFacing = Direction.SE;
+    if (poll(Input.P1_UP)) newFacing = TxSpecs[Direction.NW];
+    else if (poll(Input.P1_DOWN)) newFacing = TxSpecs[Direction.SE];
   }
   player.facing = newFacing;
   vec2.setZero(velocity);
