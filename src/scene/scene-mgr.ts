@@ -4,7 +4,7 @@ import { BaseEntity, cleanEntity, updateEntity } from './entity';
 import { Feedback, mkFeedback, initFeedback, updateFeedback } from './feedback';
 import { Grid, initGrid, mkGrid, updateGridCells } from './grid';
 import { freeWorldChunks, getWorldChunk } from '../grid-mgr';
-import { searchGraph } from '../nav-mgr';
+import { findPath, getPath, searchGraph } from '../nav-mgr';
 import { initOutlines, mkOutlines, Outlines, updateOutlines } from '../debug/outlines';
 import { initPlayer, mkPlayer, Player } from './player';
 import { getDeltaTimeSeconds } from '../time-mgr';
@@ -84,36 +84,9 @@ export const gridClick = (gridRow: number, gridCol: number): void => {
   const { worldRow, worldCol } = grid;
   const { gridRow: playerRow, gridCol: playerCol } = player;
   updateFeedback(feedback, worldRow, worldCol, gridRow, gridCol);
-  console.log(`startRow: ${gridRow}, startCol: ${gridCol}`);
-  let currentNode = searchGraph(gridRow, gridCol, playerRow, playerCol);
-  let { row, col } = currentNode;
-  if (!(row === playerRow && col === playerCol)) {
-    console.log('no solution');
-    return;
-  }
-  while (!(row === gridRow && col === gridCol)) {
-    const { cost: currentCost, neighbours } = currentNode;
-    console.log(`node row: ${row}, col: ${col}, cost: ${currentCost}`);
-    let firstIx = 0;
-    let nextNode;
-    while (firstIx < neighbours.length && (nextNode = neighbours[firstIx]) === undefined) firstIx++;
-    if (nextNode === undefined) break;
-    let nextCost = nextNode.cost;
-    for (let i = firstIx + 1; i < neighbours.length; i++) {
-      const node = neighbours[i];
-      if (node === undefined) continue;
-      const { cost } = node;
-      if (cost < nextCost) {
-        nextCost = cost;
-        nextNode = node;
-      }
-    }
-    currentNode = nextNode;
-    row = currentNode.row;
-    col = currentNode.col;
-  }
-  const { cost } = currentNode;
-  console.log(`final node row: ${row}, col: ${col}, cost: ${cost}`);
+  findPath(gridRow, gridCol, playerRow, playerCol);
+  console.log(`path length: ${getPath().numElements}`);
+
   // const { ground, item } = getWorldCell(worldRow, worldCol, gridRow, gridCol);
   // if (!ground || item !== ItemType.EMPTY) return;
   // const newRow = adjustWorldRow(worldRow, gridRow);

@@ -1,25 +1,17 @@
 import { Vec2 } from '@spissvinkel/maths';
+import * as mat3 from '@spissvinkel/maths/mat3';
 import * as vec2 from '@spissvinkel/maths/vec2';
 
 import { DebugState, getDebugState } from '../debug/debug-mgr';
-import { addCellOffset, Drawable, mkTxDrawable, TxSpec, TX_SPECS, updateTxDrawable } from './drawable';
+import { addCellOffset, Drawable, grid2world, mkTxDrawable, TxSpec, TX_SPECS, updateTxDrawable } from './drawable';
 import { addDrawable, Entity, mkBaseEntity } from './entity';
 import { updateFeedback } from './feedback';
-import { adjustWorldCol, adjustWorldRow, freeWorldChunks, getWorldCell, GRID_COLS, GRID_ROWS, HALF_GRID_COLS, HALF_GRID_ROWS } from '../grid-mgr';
+import { adjustWorldCol, adjustWorldRow, BTM_RIGHT_GRID_COL, BTM_RIGHT_GRID_ROW, forEachGridCell, freeWorldChunks, getWorldCell, TOP_LEFT_GRID_COL, TOP_LEFT_GRID_ROW } from '../grid-mgr';
 import { Input, poll } from '../input-mgr';
 import { mkMoveable } from './moveable';
 import { updateOutlines } from '../debug/outlines';
 import { getScene } from './scene-mgr';
 import { ItemType } from '../world-mgr';
-
-export const TOP_LEFT_GRID_ROW  =  HALF_GRID_COLS - HALF_GRID_ROWS; //   7
-export const TOP_LEFT_GRID_COL  = -HALF_GRID_COLS - HALF_GRID_ROWS; // -25
-export const TOP_RIGHT_GRID_ROW = -HALF_GRID_COLS - HALF_GRID_ROWS; // -25
-export const TOP_RIGHT_GRID_COL =  HALF_GRID_COLS - HALF_GRID_ROWS; //   7
-export const BTM_LEFT_GRID_ROW  =  HALF_GRID_ROWS + HALF_GRID_COLS; //  25
-export const BTM_LEFT_GRID_COL  =  HALF_GRID_ROWS - HALF_GRID_COLS; // - 7
-export const BTM_RIGHT_GRID_ROW =  HALF_GRID_ROWS - HALF_GRID_COLS; // - 7
-export const BTM_RIGHT_GRID_COL =  HALF_GRID_ROWS + HALF_GRID_COLS; //  25
 
 export interface Grid extends Entity<Grid> {
   worldRow  : number; // centre
@@ -31,22 +23,17 @@ export interface Grid extends Entity<Grid> {
 }
 
 export const mkGrid = (): Grid => {
-  console.log(`[mkGrid] TOP_LEFT_GRID_ROW : ${TOP_LEFT_GRID_ROW}, TOP_LEFT_GRID_COL : ${TOP_LEFT_GRID_COL}`);
-  console.log(`[mkGrid] TOP_RIGHT_GRID_ROW: ${TOP_RIGHT_GRID_ROW}, TOP_RIGHT_GRID_COL: ${TOP_RIGHT_GRID_COL}`);
-  console.log(`[mkGrid] BTM_LEFT_GRID_ROW : ${BTM_LEFT_GRID_ROW}, BTM_LEFT_GRID_COL : ${BTM_LEFT_GRID_COL}`);
-  console.log(`[mkGrid] BTM_RIGHT_GRID_ROW: ${BTM_RIGHT_GRID_ROW}, BTM_RIGHT_GRID_COL: ${BTM_RIGHT_GRID_COL}`);
-
   const grid = mkBaseEntity(true) as Grid;
   grid.worldRow = 0;
   grid.worldCol = 0;
-  const offset = grid.offset = vec2.zero();
-  const cellOffsetNW = addCellOffset(vec2.ofV(offset), -HALF_GRID_ROWS, -HALF_GRID_COLS);
-  const cellOffsetNE = addCellOffset(vec2.ofV(offset), -HALF_GRID_ROWS,  HALF_GRID_COLS);
-  const cellOffsetSW = addCellOffset(vec2.ofV(offset),  HALF_GRID_ROWS, -HALF_GRID_COLS);
-  const cellOffsetSE = addCellOffset(vec2.ofV(offset),  HALF_GRID_ROWS,  HALF_GRID_COLS);
+  grid.offset = vec2.zero();
+  const topLeft = vec2.of(TOP_LEFT_GRID_COL, -TOP_LEFT_GRID_ROW);
+  mat3.mulV2(grid2world, topLeft, topLeft);
+  const btmRight = vec2.of(BTM_RIGHT_GRID_COL, -BTM_RIGHT_GRID_ROW);
+  mat3.mulV2(grid2world, btmRight, btmRight);
   grid.extent = {
-    min: vec2.of(cellOffsetSW.x, cellOffsetSE.y),
-    max: vec2.of(cellOffsetNE.x, cellOffsetNW.y)
+    min: vec2.of(topLeft.x, btmRight.y),
+    max: vec2.of(btmRight.x, topLeft.y)
   };
   grid.playerDI = -1;
   grid.feedbackDI = -1;
@@ -283,26 +270,4 @@ export const setGridCellOffset = (drawable: Drawable, gridRow: number, gridCol: 
   if (txInfo === undefined) return;
   const { txSpec: { offset: txSpecOffset } } = txInfo;
   addCellOffset(vec2.addV(vec2.addV(drawableOffset, txSpecOffset), entityOffset), gridRow, gridCol);
-};
-
-export const forEachGridCell = (f: (gridRow: number, gridCol: number) => void): void => {
-  let r0 = TOP_LEFT_GRID_ROW, c0 = TOP_LEFT_GRID_COL, r, c;
-  for (let y = 0; y < GRID_ROWS - 1; y++) {
-    for (let k = 0; k < 2; k++) {
-      r = r0;
-      c = c0 + k;
-      for (let x = k; x < GRID_COLS; x++) {
-        f(r, c);
-        r--;
-        c++;
-      }
-    }
-    r0++;
-    c0++;
-  }
-  for (let x = 0; x < GRID_COLS; x++) {
-    f(r0, c0);
-    r0--;
-    c0++;
-  }
 };

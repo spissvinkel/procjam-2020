@@ -1,21 +1,30 @@
 import { Vec2 } from '@spissvinkel/maths';
 import * as mat3 from '@spissvinkel/maths/mat3';
 import * as vec2 from '@spissvinkel/maths/vec2';
+import { getWorldCell } from './grid-mgr';
 import { grid2world } from './scene/drawable';
 
 import { getScene } from './scene/scene-mgr';
-import { addToList, ArrayList, clearList, listSize, mkArrayList } from './utils';
-import { Cell } from './world-mgr';
+import { addToList, ArrayList, clearList, isEmptyList, listSize, mkArrayList } from './utils';
+import { Cell, ItemType } from './world-mgr';
 
 export const enum Direction { N, NE, E, SE, S, SW, W, NW }
 
-const DURECTIONS = [
-  Direction.N, Direction.NE, Direction.E, Direction.SE, Direction.S, Direction.SW, Direction.W, Direction.NW
-];
+export type Neighbours = [ Node?, Node?, Node?, Node?, Node?, Node?, Node?, Node? ]
+
+export interface Node {
+  row  : number;
+  col  : number;
+  pos  : Vec2;
+  cost : number;
+  nodes: Neighbours;
+}
+
+interface Offset { rowOffset: number, colOffset: number }
 
 const NUM_DIRS = 8, HALF_DIRS = NUM_DIRS / 2;
 
-interface Offset { rowOffset: number, colOffset: number }
+const COSTS = [ 1.0, 1.1, 1.0, 1.1, 1.0, 1.1, 1.0, 1.1 ];
 
 const OFFSETS: Offset[] = [
   { rowOffset: -1,  colOffset:  0 },
@@ -28,31 +37,80 @@ const OFFSETS: Offset[] = [
   { rowOffset: -1,  colOffset: -1 }
 ];
 
-export type Neighbours = [ Node?, Node?, Node?, Node?, Node?, Node?, Node?, Node? ]
+const DIRECTIONS = [
+  Direction.N, Direction.NE, Direction.E, Direction.SE, Direction.S, Direction.SW, Direction.W, Direction.NW
+];
 
-export interface Node {
-  row       : number;
-  col       : number;
-  cost      : number;
-  neighbours: Neighbours;
-}
-
-const mkNode = (): Node => ({ row: 0, col: 0, cost: 0, neighbours: [ ] });
+const mkNode = (): Node => ({ row: 0, col: 0, pos: vec2.zero(), cost: 0, nodes: [ ] });
 
 const nodePool = mkArrayList(mkNode);
 const openList = mkArrayList<Node>();
 const closedList = mkArrayList<Node>();
+const path = mkArrayList<Node>();
+const cellPos = vec2.zero();
+
+export const getDirection = (rowOffset: number, colOffset: number): Direction => {
+  for (let i = 0; i < NUM_DIRS; i++) {
+    const { rowOffset: ro, colOffset: co } = OFFSETS[i];
+    if (ro === rowOffset && co === colOffset) return DIRECTIONS[i];
+  }
+  return Direction.SE;
+};
+
+export const findPath = (startRow: number, startCol: number, endRow: number, endCol: number): void => {
+  clearPath();
+  let currentNode = searchGraph(startRow, startCol, endRow, endCol);
+  let { row, col } = currentNode;
+  if (!(row === endRow && col === endCol)) return;
+  while (!(row === startRow && col === startCol)) {
+    const { nodes } = currentNode;
+    let firstIx = 0;
+    let nextNode;
+    while (firstIx < nodes.length && (nextNode = nodes[firstIx]) === undefined) firstIx++;
+    if (nextNode === undefined) break;
+    let nextCost = nextNode.cost;
+    for (let i = firstIx + 1; i < nodes.length; i++) {
+      const node = nodes[i];
+      if (node === undefined) continue;
+      const { cost } = node;
+      if (cost < nextCost) {
+        nextCost = cost;
+        nextNode = node;
+      }
+    }
+    currentNode = nextNode;
+    row = currentNode.row;
+    col = currentNode.col;
+    addToList(path, currentNode);
+  }
+};
+
+export const getPath = (): ArrayList<Node> => path;
+export const getPathNode = (index: number): Node | undefined => {
+  return index >= path.numElements ? undefined : path.elements[index];
+};
+export const getLastPathNode = (): Node | undefined => {
+  return path.numElements === 0 ? undefined : path.elements[path.numElements - 1];
+};
+export const isPathEmpty = (): boolean => isEmptyList(path);
+export const clearPath = (): void => emptyList(path);
 
 export const searchGraph = (startRow: number, startCol: number, endRow: number, endCol: number): Node => {
+  clearList(nodePool);
   emptyList(openList);
   emptyList(closedList);
-  clearList(nodePool);
+  emptyList(path);
   const { grid: { worldRow, worldCol, extent: { min, max } } } = getScene();
   const startNode = addToList(nodePool);
   startNode.row = startRow;
   startNode.col = startCol;
   startNode.cost = 0;
-  emptyNeighbours(startNode.neighbours);
+  emptyNeighbours(startNode.nodes);
+  if (!hasCell(min, max, worldRow, worldCol, startRow, startCol)) {
+    vec2.setZero(startNode.pos);
+    return startNode;
+  }
+  vec2.setV(startNode.pos, cellPos);
   addToList(openList, startNode);
   let node: Node = startNode;
   while (listSize(openList) > 0) {
@@ -63,21 +121,22 @@ export const searchGraph = (startRow: number, startCol: number, endRow: number, 
       const { rowOffset, colOffset } = OFFSETS[i];
       const nextRow = row + rowOffset, nextCol = col + colOffset;
       if (hasNode(closedList, nextRow, nextCol)) continue;
-      const nextCost = cost + 1;
+      const nextCost = cost + COSTS[i];
       let nextNode = findNode(openList, nextRow, nextCol);
       if (nextNode === undefined) {
-        if (getCell(min, max, worldRow, worldCol, nextRow, nextCol) === undefined) continue;
+        if (!hasCell(min, max, worldRow, worldCol, nextRow, nextCol)) continue;
         nextNode = addToList(nodePool);
         nextNode.row = nextRow;
         nextNode.col = nextCol;
+        vec2.setV(nextNode.pos, cellPos);
         nextNode.cost = Number.MAX_SAFE_INTEGER;
-        emptyNeighbours(nextNode.neighbours);
+        emptyNeighbours(nextNode.nodes);
         addToList(openList, nextNode);
       }
       if (nextNode.cost <= nextCost) continue;
       nextNode.cost = nextCost;
-      nextNode.neighbours[(i + HALF_DIRS) % NUM_DIRS] = node;
-      node.neighbours[i] = nextNode;
+      nextNode.nodes[(i + HALF_DIRS) % NUM_DIRS] = node;
+      node.nodes[i] = nextNode;
     }
     removeNode(openList, node);
     addToList(closedList, node);
@@ -85,19 +144,19 @@ export const searchGraph = (startRow: number, startCol: number, endRow: number, 
   return node;
 };
 
-// Tmp vars
-const gridPos = vec2.zero();
-const position = vec2.zero();
+const findCell = (min: Vec2, max: Vec2, worldRow: number, worldCol: number, gridRow: number, gridCol: number): Cell | undefined => {
+  vec2.set(cellPos, gridCol, -gridRow);
+  mat3.mulV2(grid2world, cellPos, cellPos);
+  const { x, y } = cellPos;
+  if (x < min.x || x > max.x || y < min.y || y > max.y) return undefined;
+  const cell = getWorldCell(worldRow, worldCol, gridRow, gridCol);
+  const { ground, item } = cell;
+  if (!(ground && item === ItemType.EMPTY)) return undefined;
+  return cell;
+};
 
-const getCell = (min: Vec2, max: Vec2, worldRow: number, worldCol: number, gridRow: number, gridCol: number): Cell | undefined => {
-  console.log(`[getCell] gridRow: ${gridRow}, gridCol: ${gridCol}`);
-  vec2.set(position, gridCol, -gridRow);
-  mat3.mulV2(grid2world, position, position);
-  console.log(`[getCell] position: ${vec2.toString(position)}`);
-  const { x, y } = position;
-  if (x < min.x || x > max.x || y < min.y || y > max.y)
-    console.log(`[getCell] outside min: ${vec2.toString(min)}, max: ${vec2.toString(max)}`);
-  return undefined;
+const hasCell = (min: Vec2, max: Vec2, worldRow: number, worldCol: number, gridRow: number, gridCol: number): boolean => {
+  return findCell(min, max, worldRow, worldCol, gridRow, gridCol) !== undefined;
 };
 
 const findNode = (list: ArrayList<Node>, gridRow: number, gridCol: number): Node | undefined => {
@@ -125,17 +184,24 @@ const cheapestNode = (list: ArrayList<Node>): Node => {
   return cheapest;
 };
 
+/**
+ * Assumes node is known to be in the list
+ *
+ * @param list
+ * @param node
+ */
 const removeNode = (list: ArrayList<Node | undefined>, node: Node): void => {
+  list.numElements--;
   const { elements, numElements } = list;
   const last = elements[numElements];
   if (last === node) {
-    elements[--list.numElements] = undefined;
+    elements[numElements] = undefined;
     return;
   }
   for (let i = 0; i < numElements; i++) {
     if (elements[i] === node) {
       elements[i] = last;
-      elements[--list.numElements] = undefined;
+      elements[numElements] = undefined;
       break;
     }
   }
