@@ -5,12 +5,21 @@ import { DebugState, getDebugState } from '../debug/debug-mgr';
 import { addCellOffset, Drawable, mkTxDrawable, TxSpec, TX_SPECS, updateTxDrawable } from './drawable';
 import { addDrawable, Entity, mkBaseEntity } from './entity';
 import { updateFeedback } from './feedback';
-import { adjustWorldCol, adjustWorldRow, freeWorldChunks, getWorldCell, GRID_COLS, GRID_ROWS, HALF_GRID_COLS, HALF_GRID_ROWS, TOP_LEFT_GRID_COL, TOP_LEFT_GRID_ROW } from '../grid-mgr';
+import { adjustWorldCol, adjustWorldRow, freeWorldChunks, getWorldCell, GRID_COLS, GRID_ROWS, HALF_GRID_COLS, HALF_GRID_ROWS } from '../grid-mgr';
 import { Input, poll } from '../input-mgr';
 import { mkMoveable } from './moveable';
 import { updateOutlines } from '../debug/outlines';
 import { getScene } from './scene-mgr';
 import { ItemType } from '../world-mgr';
+
+export const TOP_LEFT_GRID_ROW  =  HALF_GRID_COLS - HALF_GRID_ROWS; //   7
+export const TOP_LEFT_GRID_COL  = -HALF_GRID_COLS - HALF_GRID_ROWS; // -25
+export const TOP_RIGHT_GRID_ROW = -HALF_GRID_COLS - HALF_GRID_ROWS; // -25
+export const TOP_RIGHT_GRID_COL =  HALF_GRID_COLS - HALF_GRID_ROWS; //   7
+export const BTM_LEFT_GRID_ROW  =  HALF_GRID_ROWS + HALF_GRID_COLS; //  25
+export const BTM_LEFT_GRID_COL  =  HALF_GRID_ROWS - HALF_GRID_COLS; // - 7
+export const BTM_RIGHT_GRID_ROW =  HALF_GRID_ROWS - HALF_GRID_COLS; // - 7
+export const BTM_RIGHT_GRID_COL =  HALF_GRID_ROWS + HALF_GRID_COLS; //  25
 
 export interface Grid extends Entity<Grid> {
   worldRow  : number; // centre
@@ -22,6 +31,11 @@ export interface Grid extends Entity<Grid> {
 }
 
 export const mkGrid = (): Grid => {
+  console.log(`[mkGrid] TOP_LEFT_GRID_ROW : ${TOP_LEFT_GRID_ROW}, TOP_LEFT_GRID_COL : ${TOP_LEFT_GRID_COL}`);
+  console.log(`[mkGrid] TOP_RIGHT_GRID_ROW: ${TOP_RIGHT_GRID_ROW}, TOP_RIGHT_GRID_COL: ${TOP_RIGHT_GRID_COL}`);
+  console.log(`[mkGrid] BTM_LEFT_GRID_ROW : ${BTM_LEFT_GRID_ROW}, BTM_LEFT_GRID_COL : ${BTM_LEFT_GRID_COL}`);
+  console.log(`[mkGrid] BTM_RIGHT_GRID_ROW: ${BTM_RIGHT_GRID_ROW}, BTM_RIGHT_GRID_COL: ${BTM_RIGHT_GRID_COL}`);
+
   const grid = mkBaseEntity(true) as Grid;
   grid.worldRow = 0;
   grid.worldCol = 0;

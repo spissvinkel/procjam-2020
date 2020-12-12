@@ -86,8 +86,13 @@ export const gridClick = (gridRow: number, gridCol: number): void => {
   updateFeedback(feedback, worldRow, worldCol, gridRow, gridCol);
   console.log(`startRow: ${gridRow}, startCol: ${gridCol}`);
   let currentNode = searchGraph(gridRow, gridCol, playerRow, playerCol);
-  while (!(currentNode.row === gridRow && currentNode.col === gridCol)) {
-    const { row, col, cost: currentCost, neighbours } = currentNode;
+  let { row, col } = currentNode;
+  if (!(row === playerRow && col === playerCol)) {
+    console.log('no solution');
+    return;
+  }
+  while (!(row === gridRow && col === gridCol)) {
+    const { cost: currentCost, neighbours } = currentNode;
     console.log(`node row: ${row}, col: ${col}, cost: ${currentCost}`);
     let firstIx = 0;
     let nextNode;
@@ -104,8 +109,10 @@ export const gridClick = (gridRow: number, gridCol: number): void => {
       }
     }
     currentNode = nextNode;
+    row = currentNode.row;
+    col = currentNode.col;
   }
-  const { row, col, cost } = currentNode;
+  const { cost } = currentNode;
   console.log(`final node row: ${row}, col: ${col}, cost: ${cost}`);
   // const { ground, item } = getWorldCell(worldRow, worldCol, gridRow, gridCol);
   // if (!ground || item !== ItemType.EMPTY) return;

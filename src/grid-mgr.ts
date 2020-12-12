@@ -1,14 +1,11 @@
 import { addToList, clearList, mkArrayList } from './utils';
 import { Cell, Chunk, CHUNK_COLS, CHUNK_ROWS, freeChunk, getChunk, WORLD_COLS, WORLD_ROWS } from './world-mgr';
 
-export const GRID_ROWS = 23;
+export const GRID_ROWS = 19;
 export const GRID_COLS = 33;
 
-export const HALF_GRID_ROWS = Math.floor(GRID_ROWS / 2);
-export const HALF_GRID_COLS = Math.floor(GRID_COLS / 2);
-
-export const TOP_LEFT_GRID_ROW =  HALF_GRID_COLS - HALF_GRID_ROWS;
-export const TOP_LEFT_GRID_COL = -HALF_GRID_COLS - HALF_GRID_ROWS;
+export const HALF_GRID_ROWS = Math.floor(GRID_ROWS / 2); //  9
+export const HALF_GRID_COLS = Math.floor(GRID_COLS / 2); // 16
 
 export interface ChunkKey { top: number, left: number }
 
