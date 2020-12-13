@@ -7,7 +7,6 @@ import { addCellOffset, Drawable, grid2world, mkTxDrawable, TxSpec, TX_SPECS, up
 import { addDrawable, Entity, mkBaseEntity } from './entity';
 import { updateFeedback } from './feedback';
 import { adjustWorldCol, adjustWorldRow, BTM_RIGHT_GRID_COL, BTM_RIGHT_GRID_ROW, forEachGridCell, freeWorldChunks, getWorldCell, TOP_LEFT_GRID_COL, TOP_LEFT_GRID_ROW } from '../grid-mgr';
-import { Input, poll } from '../input-mgr';
 import { mkMoveable } from './moveable';
 import { updateOutlines } from '../debug/outlines';
 import { getScene } from './scene-mgr';
@@ -63,13 +62,13 @@ const updatePosition = (grid: Grid): void => {
   let pdi = playerDI;
   if (pdi < 0) return;
   const { feedback, player, outlines } = getScene();
-  const { position: playerPos, gridRow: playerRow, gridCol: playerCol, offset: playerOffset, facing } = player;
+  const { position: playerPos, gridRow: playerRow, gridCol: playerCol, offset: playerOffset, txSpec } = player;
   const { position: outlinesPos } = outlines;
   const debug = getDebugState() !== DebugState.DEBUG_OFF;
   const pd = drawables[pdi];
   if (playerRow === 0 && playerCol === 0) {
     // Update player drawable
-    setGridCellOffset(updateTxDrawable(pd, facing, true), 0, 0, playerOffset);
+    setGridCellOffset(updateTxDrawable(pd, txSpec, true), 0, 0, playerOffset);
     let di: number;
     let d: Drawable;
     while (pdi > 0 && compareOffsets(pd, (d = drawables[di = pdi - 1])) < 0) {
@@ -96,7 +95,9 @@ const updatePosition = (grid: Grid): void => {
     vec2.inv(gridPos);
     const newWorldRow = adjustWorldRow(worldRow, playerRow);
     const newWorldCol = adjustWorldCol(worldCol, playerCol);
-    updateFeedback(feedback, newWorldRow, newWorldCol, 0, 0);
+    const newFbRow = feedback.gridRow - playerRow;
+    const newFbCol = feedback.gridCol - playerCol;
+    updateFeedback(feedback, newFbRow, newFbCol);
     updateGridCells(grid, newWorldRow, newWorldCol);
     if (debug) {
       vec2.setV(outlinesPos, gridPos);
@@ -105,21 +106,9 @@ const updatePosition = (grid: Grid): void => {
     freeWorldChunks();
   }
 
-
-  if (poll(Input.P1_DEBUG)) {
-    const counts: { [ key: string ]: number } = {};
-    for (let i = 0; i < drawables.length; i++) {
-      const { txInfo } = drawables[i];
-      if (txInfo === undefined) continue;
-      const { txSpec: { txId } } = txInfo;
-      if (txId in counts) counts[txId]++;
-      else counts[txId] = 1;
-    }
-    console.log('***** tx drawables *****');
-    for (const key in counts) {
-      console.log(`${key}: ${counts[key]}`);
-    }
-  }
+  const fbd = drawables[grid.feedbackDI];
+  const { gridRow, gridCol, offset, txSpec: fbTxSpec, isTarget } = feedback;
+  setGridCellOffset(updateTxDrawable(fbd, fbTxSpec, isTarget), gridRow, gridCol, offset);
 };
 
 type CompRes = -1 | 0 | 1;
@@ -152,7 +141,7 @@ export const updateGridCells = (grid: Grid, worldRow: number, worldCol: number):
   const { drawables, offset: gridOffset } = grid;
   const { feedback, player } = getScene();
   const { gridRow: fbGridRow, gridCol: fbGridCol, offset: fbOffset, txSpec: fbTxSpec } = feedback;
-  const { gridRow: playerGridRow, gridCol: playerGridCol, offset: playerOffset, facing: playerTxSpec } = player;
+  const { gridRow: playerGridRow, gridCol: playerGridCol, offset: playerOffset, txSpec: playerTxSpec } = player;
   let di = 0;
   // Add terrain drawables
   forEachGridCell((gridRow, gridCol) => {

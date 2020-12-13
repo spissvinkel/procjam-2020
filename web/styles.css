@@ -238,6 +238,14 @@ h1, h2, h3, h4 {
   color: rgba(192, 192, 192, 0.15);
 }
 
+.debug-path {
+  color: rgb(160, 255, 160);
+}
+
+.debug-path .undervalue {
+  color: rgba(160, 255, 160, 0.15);
+}
+
 .debug-fps {
   color: yellow;
 }

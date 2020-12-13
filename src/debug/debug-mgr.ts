@@ -1,5 +1,6 @@
 import { isPaused, resize } from '../engine';
 import { addListener, Input } from '../input-mgr';
+import { getPath } from '../nav-mgr';
 import { getScene } from '../scene/scene-mgr';
 import { getLastSysTime, ONE_SECOND } from '../time-mgr';
 import { hideAll, showAll } from '../utils';
@@ -22,6 +23,7 @@ let debugState = 1;
 const fps = { last: 0, count: 0, avg: 0, div: null as Div };
 const chunks = { chunksDiv: null as Div, poolDiv: null as Div };
 const wpos = { wRowDiv: null as Div, wColDiv: null as Div };
+const path = { ixDiv: null as Div, lenDiv: null as Div };
 const paused = { div: null as Div };
 
 export const getDebugState = (): DebugState => DEBUG_STATES[debugState];
@@ -41,6 +43,8 @@ export const update = (): void => {
     if (chunks.poolDiv !== null) chunks.poolDiv.textContent = `${getChunkPoolSize()}`;
     if (wpos.wRowDiv !== null) wpos.wRowDiv.textContent = `${worldRow}`;
     if (wpos.wColDiv !== null) wpos.wColDiv.textContent = `${worldCol}`;
+    if (path.ixDiv !== null) path.ixDiv.textContent = `${getScene().player.stepIx}`;
+    if (path.lenDiv !== null) path.lenDiv.textContent = `${getPath().numElements}`;
     if (paused.div !== null) paused.div.textContent = isPaused() ? 'paused' : '';
   }
 };
@@ -51,6 +55,8 @@ export const init = (): void => {
   chunks.poolDiv = document.getElementById('pool');
   wpos.wRowDiv = document.getElementById('wrow');
   wpos.wColDiv = document.getElementById('wcol');
+  path.ixDiv = document.getElementById('stepix');
+  path.lenDiv = document.getElementById('pathlen');
   paused.div = document.getElementById('paused');
   addListener(Input.DEBUG, cycleDebug);
   updateHtml();

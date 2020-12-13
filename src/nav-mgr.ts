@@ -22,6 +22,13 @@ export interface Node {
 
 interface Offset { rowOffset: number, colOffset: number }
 
+export interface Step {
+  rowOffset: number;
+  colOffset: number;
+  posOffset: Vec2;
+  direction: Direction;
+}
+
 const NUM_DIRS = 8, HALF_DIRS = NUM_DIRS / 2;
 
 const COSTS = [ 1.0, 1.1, 1.0, 1.1, 1.0, 1.1, 1.0, 1.1 ];
@@ -46,7 +53,11 @@ const mkNode = (): Node => ({ row: 0, col: 0, pos: vec2.zero(), cost: 0, nodes: 
 const nodePool = mkArrayList(mkNode);
 const openList = mkArrayList<Node>();
 const closedList = mkArrayList<Node>();
-const path = mkArrayList<Node>();
+
+const mkStep = (): Step => ({ rowOffset: 0, colOffset: 0, posOffset: vec2.zero(), direction: Direction.SE });
+
+const path = mkArrayList(mkStep);
+
 const cellPos = vec2.zero();
 
 export const getDirection = (rowOffset: number, colOffset: number): Direction => {
@@ -78,28 +89,33 @@ export const findPath = (startRow: number, startCol: number, endRow: number, end
         nextNode = node;
       }
     }
+    const step = addToList(path);
+    step.rowOffset = nextNode.row - currentNode.row;
+    step.colOffset = nextNode.col - currentNode.col;
+    vec2.subVInto(nextNode.pos, currentNode.pos, step.posOffset);
+    step.direction = getDirection(step.rowOffset, step.colOffset);
     currentNode = nextNode;
     row = currentNode.row;
     col = currentNode.col;
-    addToList(path, currentNode);
   }
 };
 
-export const getPath = (): ArrayList<Node> => path;
-export const getPathNode = (index: number): Node | undefined => {
+export const getPath = (): ArrayList<Step> => path;
+export const getStep = (index: number): Step | undefined => {
   return index >= path.numElements ? undefined : path.elements[index];
 };
-export const getLastPathNode = (): Node | undefined => {
+export const getLastStep = (): Step | undefined => {
   return path.numElements === 0 ? undefined : path.elements[path.numElements - 1];
 };
+export const isLastStep = (index: number): boolean => index >= path.numElements - 1;
 export const isPathEmpty = (): boolean => isEmptyList(path);
-export const clearPath = (): void => emptyList(path);
+export const clearPath = (): void => { clearList(path); };
 
 export const searchGraph = (startRow: number, startCol: number, endRow: number, endCol: number): Node => {
   clearList(nodePool);
   emptyList(openList);
   emptyList(closedList);
-  emptyList(path);
+  clearList(path);
   const { grid: { worldRow, worldCol, extent: { min, max } } } = getScene();
   const startNode = addToList(nodePool);
   startNode.row = startRow;

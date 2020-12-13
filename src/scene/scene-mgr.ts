@@ -4,7 +4,7 @@ import { BaseEntity, cleanEntity, updateEntity } from './entity';
 import { Feedback, mkFeedback, initFeedback, updateFeedback } from './feedback';
 import { Grid, initGrid, mkGrid, updateGridCells } from './grid';
 import { freeWorldChunks, getWorldChunk } from '../grid-mgr';
-import { findPath, getPath, searchGraph } from '../nav-mgr';
+import { clearPath, findPath } from '../nav-mgr';
 import { initOutlines, mkOutlines, Outlines, updateOutlines } from '../debug/outlines';
 import { initPlayer, mkPlayer, Player } from './player';
 import { getDeltaTimeSeconds } from '../time-mgr';
@@ -68,7 +68,7 @@ const initEntities = (): void => {
   addEntity(initOutlines(outlines));
   // TODO: refactor this, probably
   const { cRow, cCol } = getWorldChunk(0, 0);
-  updateFeedback(feedback, cRow, cCol, 0, 0);
+  updateFeedback(feedback, 0, 0);
   updateGridCells(grid, cRow, cCol);
   updateOutlines(outlines, cRow, cCol);
   freeWorldChunks();
@@ -80,19 +80,10 @@ export const addEntity = (entity: BaseEntity): void => { scene.entities.push(ent
 
 // TODO: refactor this
 export const gridClick = (gridRow: number, gridCol: number): void => {
-  const { grid, feedback, player } = getScene();
-  const { worldRow, worldCol } = grid;
+  const { feedback, player } = getScene();
   const { gridRow: playerRow, gridCol: playerCol } = player;
-  updateFeedback(feedback, worldRow, worldCol, gridRow, gridCol);
+  updateFeedback(feedback, gridRow, gridCol);
+  clearPath();
+  player.stepIx = 0;
   findPath(gridRow, gridCol, playerRow, playerCol);
-  console.log(`path length: ${getPath().numElements}`);
-
-  // const { ground, item } = getWorldCell(worldRow, worldCol, gridRow, gridCol);
-  // if (!ground || item !== ItemType.EMPTY) return;
-  // const newRow = adjustWorldRow(worldRow, gridRow);
-  // const newCol = adjustWorldCol(worldCol, gridCol);
-  // updateFeedback(feedback, newRow, newCol, 0, 0);
-  // updateGridCells(grid, newRow, newCol);
-  // if (getDebugState() !== DebugState.DEBUG_OFF) updateOutlines(outlines, newRow, newCol);
-  // freeWorldChunks();
 };
