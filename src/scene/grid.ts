@@ -16,6 +16,7 @@ export interface Grid extends Entity<Grid> {
   worldRow  : number; // centre
   worldCol  : number; // centre
   offset    : Vec2;
+  itemOffset: Vec2;
   extent    : { min: Vec2, max: Vec2 };
   playerDI  : number; // drawable index
   feedbackDI: number; // drawable index
@@ -26,6 +27,7 @@ export const mkGrid = (): Grid => {
   grid.worldRow = 0;
   grid.worldCol = 0;
   grid.offset = vec2.zero();
+  grid.itemOffset = vec2.of(-0.05, 0.225);
   const topLeft = vec2.of(TOP_LEFT_GRID_COL, -TOP_LEFT_GRID_ROW);
   mat3.mulV2(grid2world, topLeft, topLeft);
   const btmRight = vec2.of(BTM_RIGHT_GRID_COL, -BTM_RIGHT_GRID_ROW);
@@ -135,10 +137,16 @@ const compareOffsets = (d1: Drawable, d2: Drawable): CompRes => {
 };
 
 export const updateGridCells = (grid: Grid, worldRow: number, worldCol: number): Grid => {
-  const { BLOCK, BLOCK_DARK, TREE_O_D_W, LOGS_S_W } = TX_SPECS;
+  const {
+    BLOCK, BLOCK_DARK,
+    TREE_O_D_W, TREE_O_F_S, TREE_T_D_S, TREE_T_F_W,
+    PLANT_B_D_E, PLANT_B_N, GRASS_D_W, GRASS_E, SHROOM_R_G_S, SHROOM_B_G_E,
+    LOGS_S_W, LOG_L_E, ROCK_T_2_N, ROCK_S_T_2_N,
+    TENT_S_O_S
+  } = TX_SPECS;
   grid.worldRow = worldRow;
   grid.worldCol = worldCol;
-  const { drawables, offset: gridOffset } = grid;
+  const { drawables, offset: gridOffset, itemOffset } = grid;
   const { feedback, player } = getScene();
   const { gridRow: fbGridRow, gridCol: fbGridCol, offset: fbOffset, txSpec: fbTxSpec } = feedback;
   const { gridRow: playerGridRow, gridCol: playerGridCol, offset: playerOffset, txSpec: playerTxSpec } = player;
@@ -159,10 +167,23 @@ export const updateGridCells = (grid: Grid, worldRow: number, worldCol: number):
   forEachGridCell((gridRow, gridCol) => {
     const { item } = getWorldCell(worldRow, worldCol, gridRow, gridCol);
     let txSpec: TxSpec | undefined = undefined;
-    if (item === ItemType.TREE) txSpec = TREE_O_D_W;
-    else if (item === ItemType.LOGS) txSpec = LOGS_S_W;
+    if (item === ItemType.TREE_OAK) txSpec = TREE_O_D_W;
+    else if (item === ItemType.TREE_OAK_FALL) txSpec = TREE_O_F_S;
+    else if (item === ItemType.TREE_THIN) txSpec = TREE_T_D_S;
+    else if (item === ItemType.TREE_THIN_FALL) txSpec = TREE_T_F_W;
+    else if (item === ItemType.PLANT_LARGE) txSpec = PLANT_B_D_E;
+    else if (item === ItemType.PLANT_SMALL) txSpec = PLANT_B_N;
+    else if (item === ItemType.GRASS_LARGE) txSpec = GRASS_D_W;
+    else if (item === ItemType.GRASS_SMALL) txSpec = GRASS_E;
+    else if (item === ItemType.SHROOM_RED) txSpec = SHROOM_R_G_S;
+    else if (item === ItemType.SHROOM_BROWN) txSpec = SHROOM_B_G_E;
+    else if (item === ItemType.LOGS_STACK) txSpec = LOGS_S_W;
+    else if (item === ItemType.LOG_LARGE) txSpec = LOG_L_E;
+    else if (item === ItemType.ROCK_TALL) txSpec = ROCK_T_2_N;
+    else if (item === ItemType.ROCK_SMALL) txSpec = ROCK_S_T_2_N;
+    else if (item === ItemType.TENT) txSpec = TENT_S_O_S;
     if (txSpec !== undefined)
-      di = addOrUpdateTxDrawable(grid, gridRow, gridCol, di, txSpec, gridOffset);
+      di = addOrUpdateTxDrawable(grid, gridRow, gridCol, di, txSpec, itemOffset);
     if (gridRow === playerGridRow && gridCol === playerGridCol) {
       grid.playerDI = di;
       di = addOrUpdateTxDrawable(grid, playerGridRow, playerGridCol, di, playerTxSpec, playerOffset);

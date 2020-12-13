@@ -7,8 +7,8 @@ import { addToList, clearList, mkArrayList } from './utils';
  * Top left world coords is (0, 0)
  */
 
-export const WORLD_CHUNKS_V = 10;
-export const WORLD_CHUNKS_H = 10;
+export const WORLD_CHUNKS_V = 100;
+export const WORLD_CHUNKS_H = 100;
 export const CHUNK_ROWS = 11;
 export const CHUNK_COLS = 11;
 export const WORLD_ROWS = WORLD_CHUNKS_V * CHUNK_ROWS;
@@ -27,7 +27,7 @@ const MAIN_HEIGHT_VAR = MAX_MAIN_HEIGHT - MIN_MAIN_HEIGHT + 1;
 const MAX_BTM = CHUNK_ROWS - 1;
 const MAX_RIGHT = CHUNK_COLS - 1;
 
-const PRNG_SEED = '0';
+const PRNG_SEED = '1';
 
 export interface Chunk {
   // Position in world row/col
@@ -64,9 +64,29 @@ export interface Cell {
 
 export const enum ItemType {
   EMPTY,
-  LOGS,
-  TREE
+  TREE_OAK,
+  TREE_OAK_FALL,
+  TREE_THIN,
+  TREE_THIN_FALL,
+  PLANT_LARGE,
+  PLANT_SMALL,
+  GRASS_LARGE,
+  GRASS_SMALL,
+  SHROOM_RED,
+  SHROOM_BROWN,
+  LOGS_STACK,
+  LOG_LARGE,
+  ROCK_TALL,
+  ROCK_SMALL,
+  TENT
 }
+
+export const SMALL_ITEMS = new Set([
+  ItemType.PLANT_LARGE, ItemType.PLANT_SMALL,
+  ItemType.GRASS_LARGE, ItemType.GRASS_SMALL,
+  ItemType.SHROOM_RED, ItemType.SHROOM_BROWN,
+  ItemType.ROCK_SMALL
+]);
 
 const mkChunk = (): Chunk => {
   const top = 0;
@@ -461,8 +481,30 @@ const generateItems = (state: AleaState, chunk: Chunk): void => {
         continue;
       }
       const n = random(state);
-      if (n < 0.01) cell.item = ItemType.LOGS;
-      else if (n < 0.04) cell.item = ItemType.TREE;
+      const m = random(state);
+      if (n < 0.00075) {
+        cell.item = ItemType.TENT;
+      } else if (n < 0.00875) {
+        if (m < 0.35) cell.item = ItemType.LOGS_STACK;
+        else cell.item = ItemType.LOG_LARGE;
+      } else if (n < 0.01875) {
+        if (m < 0.25) cell.item = ItemType.ROCK_TALL;
+        else cell.item = ItemType.ROCK_SMALL;
+      } else if (n < 0.21875) {
+        if (m < 0.25) cell.item = ItemType.PLANT_LARGE;
+        else cell.item = ItemType.PLANT_SMALL;
+      } else if (n < 0.41875) {
+        if (m < 0.35) cell.item = ItemType.GRASS_LARGE;
+        else cell.item = ItemType.GRASS_SMALL;
+      } else if (n < 0.51875) {
+        if (m < 0.5) cell.item = ItemType.SHROOM_RED;
+        else cell.item = ItemType.SHROOM_BROWN;
+      } else if (n < 0.91875) {
+        if (m < 0.08) cell.item = ItemType.TREE_THIN_FALL;
+        else if (m < 0.2) cell.item = ItemType.TREE_OAK_FALL;
+        else if (m < 0.4) cell.item = ItemType.TREE_THIN;
+        else cell.item = ItemType.TREE_OAK;
+      }
       else cell.item = ItemType.EMPTY;
     }
   }

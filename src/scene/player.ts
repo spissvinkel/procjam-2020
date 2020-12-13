@@ -9,7 +9,7 @@ import { mkMoveable } from './moveable';
 import { clearPath, Direction, getStep, isLastStep, isPathEmpty } from '../nav-mgr';
 import { getScene } from './scene-mgr';
 import { getWorldCell } from '../grid-mgr';
-import { ItemType } from '../world-mgr';
+// import { ItemType } from '../world-mgr';
 
 const TxSpecs = [
   TX_SPECS.CH_DIG_N,
@@ -130,8 +130,8 @@ const updatePosition = (player: Player, deltaTimeSeconds: number): void => {
   if (hasEnteredNewCell) {
     // Don't step into the void
     const { grid: { worldRow, worldCol } } = getScene();
-    const { ground, item } = getWorldCell(worldRow, worldCol, newRow, newCol);
-    if (!(ground && item === ItemType.EMPTY) && moveable !== undefined) {
+    const { ground/*, item*/ } = getWorldCell(worldRow, worldCol, newRow, newCol);
+    if (!(ground /*&& item === ItemType.EMPTY*/) && moveable !== undefined) {
       const { velocity } = moveable;
       vec2.addMul(position, vec2.inv(velocity), deltaTimeSeconds);
       vec2.setZero(velocity);

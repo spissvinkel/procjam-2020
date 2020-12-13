@@ -6,7 +6,7 @@ import { grid2world } from './scene/drawable';
 
 import { getScene } from './scene/scene-mgr';
 import { addToList, ArrayList, clearList, isEmptyList, listSize, mkArrayList } from './utils';
-import { Cell, ItemType } from './world-mgr';
+import { Cell, ItemType, SMALL_ITEMS } from './world-mgr';
 
 export const enum Direction { N, NE, E, SE, S, SW, W, NW }
 
@@ -16,6 +16,7 @@ export interface Node {
   row  : number;
   col  : number;
   pos  : Vec2;
+  item : ItemType;
   cost : number;
   nodes: Neighbours;
 }
@@ -32,6 +33,8 @@ export interface Step {
 const NUM_DIRS = 8, HALF_DIRS = NUM_DIRS / 2;
 
 const COSTS = [ 1.0, 1.1, 1.0, 1.1, 1.0, 1.1, 1.0, 1.1 ];
+const BIG_ITEM_COST = 0.75;
+const SMALL_ITEM_COST = 0.075;
 
 const OFFSETS: Offset[] = [
   { rowOffset: -1,  colOffset:  0 },
@@ -48,7 +51,7 @@ const DIRECTIONS = [
   Direction.N, Direction.NE, Direction.E, Direction.SE, Direction.S, Direction.SW, Direction.W, Direction.NW
 ];
 
-const mkNode = (): Node => ({ row: 0, col: 0, pos: vec2.zero(), cost: 0, nodes: [ ] });
+const mkNode = (): Node => ({ row: 0, col: 0, pos: vec2.zero(), item: ItemType.EMPTY, cost: 0, nodes: [ ] });
 
 const nodePool = mkArrayList(mkNode);
 const openList = mkArrayList<Node>();
@@ -137,18 +140,20 @@ export const searchGraph = (startRow: number, startCol: number, endRow: number, 
       const { rowOffset, colOffset } = OFFSETS[i];
       const nextRow = row + rowOffset, nextCol = col + colOffset;
       if (hasNode(closedList, nextRow, nextCol)) continue;
-      const nextCost = cost + COSTS[i];
       let nextNode = findNode(openList, nextRow, nextCol);
       if (nextNode === undefined) {
-        if (!hasCell(min, max, worldRow, worldCol, nextRow, nextCol)) continue;
+        const cell = findCell(min, max, worldRow, worldCol, nextRow, nextCol);
+        if (cell === undefined) continue;
         nextNode = addToList(nodePool);
         nextNode.row = nextRow;
         nextNode.col = nextCol;
         vec2.setV(nextNode.pos, cellPos);
+        nextNode.item = cell.item;
         nextNode.cost = Number.MAX_SAFE_INTEGER;
         emptyNeighbours(nextNode.nodes);
         addToList(openList, nextNode);
       }
+      const nextCost = cost + COSTS[i] + getItemCost(nextNode.item);
       if (nextNode.cost <= nextCost) continue;
       nextNode.cost = nextCost;
       nextNode.nodes[(i + HALF_DIRS) % NUM_DIRS] = node;
@@ -160,14 +165,20 @@ export const searchGraph = (startRow: number, startCol: number, endRow: number, 
   return node;
 };
 
+const getItemCost = (itemType: ItemType): number => {
+  if (itemType === ItemType.EMPTY) return 0.0;
+  if (SMALL_ITEMS.has(itemType)) return SMALL_ITEM_COST;
+  return BIG_ITEM_COST;
+};
+
 const findCell = (min: Vec2, max: Vec2, worldRow: number, worldCol: number, gridRow: number, gridCol: number): Cell | undefined => {
   vec2.set(cellPos, gridCol, -gridRow);
   mat3.mulV2(grid2world, cellPos, cellPos);
   const { x, y } = cellPos;
   if (x < min.x || x > max.x || y < min.y || y > max.y) return undefined;
   const cell = getWorldCell(worldRow, worldCol, gridRow, gridCol);
-  const { ground, item } = cell;
-  if (!(ground && item === ItemType.EMPTY)) return undefined;
+  const { ground/*, item*/ } = cell;
+  if (!(ground /*&& item === ItemType.EMPTY*/)) return undefined;
   return cell;
 };
 

@@ -13,13 +13,12 @@ export interface Camera extends Entity<Camera> {
   invM      : Mat3;
 }
 
-const DEFAULT_ZOOM =  16.5; //21.0; // meters
-const MIN_ZOOM     =   5.0; // meters
-const MAX_ZOOM     = 125.0; // meters
+const DEFAULT_ZOOM = 16.5; //21.0; // meters
+const MIN_ZOOM     = 10.0; // meters
+const MAX_ZOOM     = 75.0; // meters
 
 const ZOOM_FACTOR  = 0.2;
 
-// const positionDelta = vec2.zero();
 let zoom = DEFAULT_ZOOM;
 
 export const mkCamera = (): Camera => {
@@ -34,15 +33,6 @@ export const mkCamera = (): Camera => {
 };
 
 const updatePosition = (camera: Camera) => {
-  // const inputDelta = getMouseDelta();
-  // if (!isZero(inputDelta)) {
-  //   vec2.mulInto(inputDelta, zoom, positionDelta);
-  //   const { position } = camera;
-  //   vec2.subV(position, positionDelta);
-  //   const { terrain: { extent: { min, max } } } = getScene();
-  //   vec2.clampV(position, min, max);
-  //   camera.dirty = true;
-  // }
   const zoomDelta = getMouseWheel();
   if (zoomDelta !== 0.0) {
     zoom = Maths.clamp(zoom + zoomDelta * ZOOM_FACTOR * zoom, MIN_ZOOM, MAX_ZOOM);
@@ -50,8 +40,6 @@ const updatePosition = (camera: Camera) => {
     camera.dirty = true;
   }
 };
-
-// const isZero = ({ x, y }: Vec2): boolean => x === 0.0 && y === 0.0;
 
 const clean = ({ m, projection, vp, invM }: Camera) => {
   mat3.invInto(m, invM);
