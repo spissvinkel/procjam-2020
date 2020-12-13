@@ -109,8 +109,10 @@ const updatePosition = (grid: Grid): void => {
   }
 
   const fbd = drawables[grid.feedbackDI];
-  const { gridRow, gridCol, offset, txSpec: fbTxSpec, isTarget } = feedback;
-  setGridCellOffset(updateTxDrawable(fbd, fbTxSpec, isTarget), gridRow, gridCol, offset);
+  const { gridRow: fbRow, gridCol: fbCol, offset: fbOffset, txSpec: fbTxSpec, isTarget } = feedback;
+  // if (isTarget) setGridCellOffset(updateTxDrawable(fbd, fbTxSpec, true), fbRow, fbCol, fbOffset);
+  // else setGridCellOffset(updateTxDrawable(fbd, fbTxSpec, true), 0, 0, fbOffset);
+  setGridCellOffset(updateTxDrawable(fbd, fbTxSpec, isTarget), fbRow, fbCol, fbOffset);
 };
 
 type CompRes = -1 | 0 | 1;

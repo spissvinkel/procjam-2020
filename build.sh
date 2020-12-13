@@ -52,4 +52,9 @@ npx google-closure-compiler                               \
 
 # Prepare HTML, CSS and other resources
 echo "preparing web resources..."
-cp -r ./web/* ./dist
+mkdir ./dist/fnt
+mkdir ./dist/gfx
+cp    ./web/*.html    ./dist
+cp    ./web/*.css     ./dist
+cp -r ./web/fnt/*     ./dist/fnt
+cp -r ./web/gfx/*.png ./dist/gfx

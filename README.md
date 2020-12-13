@@ -1,4 +1,4 @@
-# Large World Generator #procjam 2020
+# Map Generator #procjam 2020
 
 
 ## Install dependencies
@@ -26,7 +26,7 @@ $ node httpd
 
 ## License, attribution
 
-Source code, etc: Copyright (c) 2020 Simen Storsveen, [MIT License](https://raw.githubusercontent.com/spissvinkel/procjam-2020/main/LICENSE)
+Source code, etc: [MIT License](https://raw.githubusercontent.com/spissvinkel/procjam-2020/main/LICENSE)
 
 Fonts (`web/fnt`): [Google Fonts](https://fonts.google.com/), [Open Source Font Attribution](https://fonts.google.com/attribution)
 
