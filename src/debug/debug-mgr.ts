@@ -18,7 +18,7 @@ const DEBUG_STATES = [
   DebugState.DEBUG_BASIC,
 ];
 
-let debugState = 0;
+let debugState = 1;
 
 const fps = { last: 0, count: 0, avg: 0, div: null as Div };
 const chunks = { chunksDiv: null as Div, poolDiv: null as Div };

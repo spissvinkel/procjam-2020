@@ -7,7 +7,7 @@ import { freeWorldChunks, getWorldChunk } from '../grid-mgr';
 import { clearPath, findPath } from '../nav-mgr';
 import { initOutlines, mkOutlines, Outlines, updateOutlines } from '../debug/outlines';
 import { initPlayer, mkPlayer, Player } from './player';
-import { getDeltaTimeSeconds } from '../time-mgr';
+import { getDeltaTimeSeconds, INV_SIM_TIME_SECS, SIM_TIME_SECONDS } from '../time-mgr';
 
 export interface Scene {
   entities: BaseEntity[];
@@ -32,7 +32,13 @@ export const getScene = (): Scene => scene;
 export const update = (): void => {
   const { entities } = scene;
   const deltaTimeSeconds = getDeltaTimeSeconds();
-  updateEntities(entities, deltaTimeSeconds);
+  const n = Math.floor(deltaTimeSeconds * INV_SIM_TIME_SECS);
+  let acc = 0.0;
+  for (let i = 0; i < n; i++) {
+    updateEntities(entities, SIM_TIME_SECONDS);
+    acc += SIM_TIME_SECONDS;
+  }
+  if (acc < deltaTimeSeconds) updateEntities(entities, deltaTimeSeconds - acc);
   updateMatrices(entities);
 };
 
