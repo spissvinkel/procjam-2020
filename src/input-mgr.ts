@@ -7,7 +7,7 @@ import { Viewport } from './engine';
 import { getScene, gridClick } from './scene/scene-mgr';
 
 export const enum Input {
-  DEBUG = '|',
+  DEBUG = '+',
   PAUSE = 'tab',
 
   P1_UP    = 'w',

@@ -25,7 +25,7 @@ const TxSpecs = [
 const MAX_VELOCITY = 3.5;
 const VELOCITY_X = 1.0;
 const VELOCITY_Y = CELL_Z_OFFSET / CELL_X_OFFSET;
-const TARGET_RADIUS = 0.02;
+const TARGET_RADIUS = 0.01;
 
 export interface Player extends Entity<Player> {
   gridRow: number; // position
@@ -90,7 +90,8 @@ const updateVelocity = (player: Player): void => {
       const { posOffset, direction } = step;
       let newDirection = direction;
       vec2.subVInto(posOffset, offset, velocity);
-      if (vec2.mag(velocity) < TARGET_RADIUS) {
+      const mag = vec2.mag(velocity);
+      if (mag < TARGET_RADIUS) {
         vec2.setV(position, posOffset);
         vec2.setZero(velocity);
         if (isLastStep(oldStepIx)) clearPath();
