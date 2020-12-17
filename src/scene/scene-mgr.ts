@@ -29,16 +29,18 @@ const scene: Scene = {
 
 export const getScene = (): Scene => scene;
 
+let timeAcc = 0.0;
+
 export const update = (): void => {
   const { entities } = scene;
-  const deltaTimeSeconds = getDeltaTimeSeconds();
+  const deltaTimeSeconds = getDeltaTimeSeconds() + timeAcc;
   const n = Math.floor(deltaTimeSeconds * INV_SIM_TIME_SECS);
-  let acc = 0.0;
+  timeAcc = 0.0;
   for (let i = 0; i < n; i++) {
     updateEntities(entities, SIM_TIME_SECONDS);
-    acc += SIM_TIME_SECONDS;
+    timeAcc += SIM_TIME_SECONDS;
   }
-  if (acc < deltaTimeSeconds) updateEntities(entities, deltaTimeSeconds - acc);
+  timeAcc = Math.max(0.0, deltaTimeSeconds - timeAcc);
   updateMatrices(entities);
 };
 
