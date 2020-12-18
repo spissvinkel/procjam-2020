@@ -14,6 +14,7 @@
 
 publish-*.sh
 tmp_gfx
+dist.zip
 
 /node_modules
 /package-lock.json
