@@ -146,6 +146,10 @@ const initKbdInput = (): void => {
 
 // ----- Mouse ---------------------------------------------------------------------------------------------------------
 
+const WHEEL_LINE_HEIGHT = 40;
+const WHEEL_PAGE_HEIGHT = 800;
+const WHEEL_FACTOR = 0.001;
+
 const viewportMx = mat3.id();
 
 const mouseStateNormalised = {
@@ -181,12 +185,19 @@ const onMouseUp = (event: MouseEvent): void => {
   mouseStatePixels.down = false;
 };
 
-const onWheel = (event: WheelEvent): void => {
-  mouseStatePixels.wheel += event.deltaY;
+const onWheel = (event: WheelEvent): boolean => {
+  const { deltaY, deltaMode } = event;
+  let delta = deltaY;
+  if (deltaMode === WheelEvent.DOM_DELTA_LINE) delta *= WHEEL_LINE_HEIGHT;
+  else if (deltaMode === WheelEvent.DOM_DELTA_PAGE) delta *= WHEEL_PAGE_HEIGHT;
+  mouseStatePixels.wheel += delta;
+  event.stopPropagation();
+  event.preventDefault();
+  return false;
 };
 
 const updateMouseInput = (): void => {
-  const { down: currentlyDown, position: pxPos, upPos, downPos, wheel: pxWheel } = mouseStatePixels;
+  const { down: currentlyDown, position: pxPos, upPos, downPos, wheel: wheelPx } = mouseStatePixels;
   const { down: registeredDown, position: normPos, deltaPos, tmpPos } = mouseStateNormalised;
 
   const wasDown = registeredDown;
@@ -204,7 +215,7 @@ const updateMouseInput = (): void => {
   } else {
     vec2.setZero(deltaPos);
   }
-  mouseStateNormalised.wheel = pxWheel * 0.1;
+  mouseStateNormalised.wheel = wheelPx * WHEEL_FACTOR;
   mouseStatePixels.wheel = 0.0;
 
   // TODO: organise/refactor this
